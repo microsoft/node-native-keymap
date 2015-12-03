@@ -1,4 +1,6 @@
 
 var keyboard = require('./build/Release/keyboard');
 
-console.log(keyboard.hello());
+var result = keyboard.hello(); 
+
+console.log(result.slice(result.length - 5));

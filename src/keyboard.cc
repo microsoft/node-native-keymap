@@ -5,7 +5,6 @@
 
 namespace vscode_keyboard {
 
-
 using v8::FunctionCallbackInfo;
 using v8::Isolate;
 using v8::Local;
