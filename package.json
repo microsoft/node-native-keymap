@@ -1,0 +1,19 @@
+{
+  "name": "vscode-keyboard",
+  "version": "0.0.1",
+  "description": "Utilities for keyboard layouts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/vscode-keyboard.git"
+  },
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/vscode-keyboard/issues"
+  },
+  "homepage": "https://github.com/Microsoft/vscode-keyboard#readme"
+}
