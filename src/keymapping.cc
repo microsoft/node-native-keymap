@@ -383,7 +383,7 @@ void GenerateEntries(Isolate* isolate, std::vector<Local<Object>> &result, std::
     AddEntry(isolate, result, "VKEY_ALTGR", value, withShift, withAltGr, withShiftAltGr);
 }
 
-void Method(const FunctionCallbackInfo<Value>& args) {
+void GetKeyMap(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
 
   std::vector<KeyMapping> mapping = GetKeyMapping();
@@ -403,7 +403,7 @@ void Method(const FunctionCallbackInfo<Value>& args) {
 }
 
 void init(Local<Object> exports) {
-  NODE_SET_METHOD(exports, "hello", Method);
+  NODE_SET_METHOD(exports, "getKeyMap", GetKeyMap);
 }
 
 NODE_MODULE(addon, init)
