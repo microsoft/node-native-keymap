@@ -214,4 +214,4 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
   
-}
+} // namespace vscode_keyboard
