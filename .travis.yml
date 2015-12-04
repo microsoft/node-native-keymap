@@ -1,0 +1,30 @@
+os:
+  - linux
+sudo: false
+
+language: node_js
+
+node_js:
+  - "4.1"
+
+env:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
+install:
+  - export CXX=g++-4.8
+  - $CXX --version
+  - npm i
+
+git:
+  depth: 10
+
+branches:
+  only:
+    - master
+
