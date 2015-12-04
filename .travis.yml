@@ -20,7 +20,9 @@ before_install:
   - nvm use 4.1
   - npm config set python `which python`
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
-      export CXX="g++-4.9";
+      export CXX="g++-4.9" DISPLAY=:99.0;
+      sh -e /etc/init.d/xvfb start;
+      sleep 3;
     fi
 
 install:

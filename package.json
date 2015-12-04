@@ -1,19 +1,19 @@
 {
-  "name": "vscode-keyboard",
+  "name": "keymap",
   "version": "0.0.1",
-  "description": "Utilities for keyboard layouts",
+  "description": "Get OS key mapping",
   "main": "index.js",
   "scripts": {
     "test": "node test/test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/vscode-keyboard.git"
+    "url": "git+https://github.com/alexandrudima/vscode-keyboard.git"
   },
   "author": "Microsoft Corporation",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Microsoft/vscode-keyboard/issues"
+    "url": "https://github.com/alexandrudima/vscode-keyboard/issues"
   },
-  "homepage": "https://github.com/Microsoft/vscode-keyboard#readme"
+  "homepage": "https://github.com/alexandrudima/vscode-keyboard#readme"
 }
