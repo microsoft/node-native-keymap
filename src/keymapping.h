@@ -1,5 +1,5 @@
-#ifndef KEYBOARD_H_
-#define KEYBOARD_H_
+#ifndef KEYMAPPING_H_
+#define KEYMAPPING_H_
 
 #include <string>
 #include <vector>
@@ -20,4 +20,4 @@ std::vector<KeyMapping> GetKeyMapping();
 
 }  // namespace vscode_keyboard
 
-#endif  // KEYBOARD_H_
+#endif  // KEYMAPPING_H_

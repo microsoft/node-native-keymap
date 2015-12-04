@@ -1,7 +1,7 @@
 
-var keyboard = require('./build/Release/keyboard');
+var keymapping = require('./build/Release/keymapping');
 
-var result = keyboard.hello();
+var result = keymapping.hello();
 
 //console.log(result.slice(result.length - 5));
 console.log(result);

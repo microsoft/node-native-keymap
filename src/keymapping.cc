@@ -1,7 +1,7 @@
 
 #include <node.h>
 
-#include "keyboard.h"
+#include "keymapping.h"
 
 namespace vscode_keyboard {
 

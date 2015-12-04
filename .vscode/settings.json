@@ -2,5 +2,10 @@
 {
   "editor.insertSpaces": true,
   "files.trimTrailingWhitespace": true,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "build/**": true
+  }
 }

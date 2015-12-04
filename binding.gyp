@@ -1,10 +1,10 @@
 {
   "targets": [
     {
-      "target_name": "keyboard",
+      "target_name": "keymapping",
       "sources": [
         "src/string_conversion.cc",
-        "src/keyboard.cc"
+        "src/keymapping.cc"
       ],
       "conditions": [
         ['OS=="linux"', {
