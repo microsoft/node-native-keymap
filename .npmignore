@@ -1,0 +1,6 @@
+/.vscode
+/build
+/test
+.gitignore
+.npmignore
+.travis.yml
