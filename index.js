@@ -3,8 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-var keymapping = require('./build/Release/keymapping');
+var keymapping = null;
+var tried = false;
 
 exports.getKeyMap = function() {
-  return keymapping.getKeyMap();
+  if (!tried) {
+    tried = true;
+    try {
+      keymapping = require('./build/Release/keymapping');
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  if (!keymapping) {
+    return [];
+  }
+
+  var r = [];
+  try {
+    r = keymapping.getKeyMap();
+  } catch(err) {
+    console.error(err);
+  }
+  return r;
 };
