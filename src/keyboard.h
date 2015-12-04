@@ -6,7 +6,7 @@
 #include "../deps/chromium/keyboard_codes.h"
 
 namespace vscode_keyboard {
-  
+
 struct KeyMapping {
   ui::KeyboardCode key_code;
   std::string value;
@@ -18,6 +18,6 @@ typedef struct KeyMapping KeyMapping;
 
 std::vector<KeyMapping> GetKeyMapping();
 
-}
+}  // namespace vscode_keyboard
 
 #endif  // KEYBOARD_H_

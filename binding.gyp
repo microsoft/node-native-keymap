@@ -3,6 +3,7 @@
     {
       "target_name": "keyboard",
       "sources": [
+        "src/string_conversion.cc",
         "src/keyboard.cc"
       ],
       "conditions": [
