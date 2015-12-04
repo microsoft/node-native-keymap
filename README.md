@@ -4,13 +4,13 @@ Returns what characters are produced by pressing keys with different modifiers o
 ## Installing
 
 ```sh
-npm install keymap
+npm install native-keymap
 ```
 
 ## Using
 
 ```javascript
-var keymap = require('keymap');
+var keymap = require('native-keymap');
 console.log(keymap.getKeyMap());
 ```
 
