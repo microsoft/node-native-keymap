@@ -1,5 +1,6 @@
 
 #include "keyboard.h"
+#include "string_conversion.h"
 
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
@@ -113,15 +114,9 @@ std::string GetStrFromXEvent(const XEvent* xev) {
   if (!character)
     return std::string();
 
-  wchar_t *t = new wchar_t[2];
-  t[0] = character;
-  t[1] = 0;
+  wchar_t value = character;
 
-  std::string result = UTF16to8(t);
-
-  delete []t;
-
-  return result;
+  return vscode_keyboard::UTF16toUTF8(&value, 1);
 }
 
 } // namespace
