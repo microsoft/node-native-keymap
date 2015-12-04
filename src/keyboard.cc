@@ -15,17 +15,20 @@ using v8::Value;
 
 void AddEntry(Isolate* isolate, std::vector<Local<Object>> &result, std::string key_code, Local<String> value, Local<String> withShift, Local<String> withAltGr, Local<String> withShiftAltGr) {
   Local<Object> entry = Object::New(isolate);
-  
+
   entry->Set(String::NewFromUtf8(isolate, "key_code"), String::NewFromUtf8(isolate, key_code.c_str()));
   entry->Set(String::NewFromUtf8(isolate, "value"), value);
   entry->Set(String::NewFromUtf8(isolate, "withShift"), withShift);
   entry->Set(String::NewFromUtf8(isolate, "withAltGr"), withAltGr);
   entry->Set(String::NewFromUtf8(isolate, "withShiftAltGr"), withShiftAltGr);
-  
+
   result.push_back(entry);
 }
 
 void GenerateEntries(Isolate* isolate, std::vector<Local<Object>> &result, std::vector<KeyMapping>::iterator it) {
+  if (it->value.length() == 0 && it->withShift.length() == 0 && it->withAltGr.length() == 0 && it->withShiftAltGr.length() == 0) {
+    return;
+  }
   Local<String> value = String::NewFromUtf8(isolate, it->value.c_str());
   Local<String> withShift = String::NewFromUtf8(isolate, it->withShift.c_str());
   Local<String> withAltGr = String::NewFromUtf8(isolate, it->withAltGr.c_str());
@@ -385,13 +388,13 @@ void Method(const FunctionCallbackInfo<Value>& args) {
   for(std::vector<KeyMapping>::iterator it = mapping.begin(); it != mapping.end(); ++it) {
     GenerateEntries(isolate, result, it);
   }
-  
-  int resultCount = result.size();
+
+  int resultCount = (int)result.size();
   Local<Array> resultArr = Array::New(isolate, resultCount);
   for (int index = 0; index < resultCount; index++) {
     resultArr->Set(index, result[index]);
   }
-  
+
   args.GetReturnValue().Set(resultArr);
 }
 
@@ -400,5 +403,5 @@ void init(Local<Object> exports) {
 }
 
 NODE_MODULE(addon, init)
-  
+
 } // namespace vscode_keyboard

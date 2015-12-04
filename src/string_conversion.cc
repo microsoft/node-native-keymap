@@ -2,6 +2,28 @@
 
 namespace vscode_keyboard {
 
+wchar_t conversion_buffer[10];
+
+std::string UTF16toUTF8(const wchar_t * in, int length) {
+  if (length < 10) {
+    for (int i = 0; i < length; ++i) {
+      conversion_buffer[i] = in[i];
+    }
+    conversion_buffer[length] = 0;
+    return UTF16to8(conversion_buffer);
+  }
+
+  wchar_t *t = new wchar_t[length + 1];
+  for (int i = 0; i < length; ++i) {
+    t[i] = in[i];
+  }
+  t[length] = 0;
+  std::string result = UTF16to8(t);
+  delete []t;
+
+  return result;
+}
+
 // http://stackoverflow.com/a/148766
 std::string UTF16to8(const wchar_t * in) {
   std::string out;

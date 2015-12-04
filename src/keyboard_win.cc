@@ -184,32 +184,28 @@ ui::KeyboardCode gAllKeyboardCodes[] = {
 std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *keyboard_state) {
   memset(keyboard_state, 0, 256);
 
-  if (modifiers & kShiftKeyModifierMask)
+  if (modifiers & kShiftKeyModifierMask) {
     keyboard_state[VK_SHIFT] |= 0x80;
+  }
 
-  if (modifiers & kControlKeyModifierMask)
+  if (modifiers & kControlKeyModifierMask) {
     keyboard_state[VK_CONTROL] |= 0x80;
+  }
 
-  if (modifiers & kAltKeyModifierMask)
+  if (modifiers & kAltKeyModifierMask) {
     keyboard_state[VK_MENU] |= 0x80;
+  }
 
   UINT scan_code = ::MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
 
   wchar_t chars[5];
   int code = ::ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
 
-  if (code <= 0 || (code == 1 && iswcntrl(chars[0])))
+  if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
     return std::string();
-
-  wchar_t *t = new wchar_t[code + 1];
-  for (int j = 0; j < code; j++) {
-    t[j] = chars[j];
   }
-  t[code] = 0;
-  std::string result = vscode_keyboard::UTF16to8(t);
-  delete []t;
 
-  return result;
+  return vscode_keyboard::UTF16toUTF8(chars, code);
 }
 
 } // namespace
@@ -223,8 +219,6 @@ std::vector<KeyMapping> GetKeyMapping() {
   for (size_t i = 0; i < arraysize(gAllKeyboardCodes); ++i) {
     ui::KeyboardCode key_code = gAllKeyboardCodes[i];
 
-    // printf("i:%d, key_code: %d\n", i, key_code);
-
     std::string value = GetStrFromKeyPress(key_code, 0, keyboard_state);
     std::string withShift = GetStrFromKeyPress(key_code, kShiftKeyModifierMask, keyboard_state);
     std::string withAltGr = GetStrFromKeyPress(key_code, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state);
@@ -237,34 +231,6 @@ std::vector<KeyMapping> GetKeyMapping() {
     keyMapping.withAltGr = withAltGr;
     keyMapping.withShiftAltGr = withShiftAltGr;
     result.push_back(keyMapping);
-    // UINT scan_code = ::MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
-    // BYTE keyboard_state[256];
-    // memset(keyboard_state, 0, 256);
-    // // *error_msg = std::string();
-    // // if (modifiers & kShiftKeyModifierMask)
-    // //   keyboard_state[VK_SHIFT] |= 0x80;
-    // // if (modifiers & kControlKeyModifierMask)
-    // //   keyboard_state[VK_CONTROL] |= 0x80;
-    // // if (modifiers & kAltKeyModifierMask)
-    // //   keyboard_state[VK_MENU] |= 0x80;
-    // wchar_t chars[5];
-    // int code = ::ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
-    // // |ToUnicode| converts some non-text key codes like F1 to various
-    // // control chars. Filter those out.
-    // std::string value;
-    // if (code <= 0 || (code == 1 && iswcntrl(chars[0])))
-    //   value = std::string();
-    // else {
-    //   wchar_t *t = new wchar_t[code + 1];
-    //   for (int j = 0; j < code; j++) {
-    //     t[j] = chars[j];
-    //   }
-    //   t[code] = 0;
-    //   value = UTF16to8(t);
-    //   delete []t;
-    // }
-
-    // printf(" => %s\n", value.c_str());
   }
 
   return result;
