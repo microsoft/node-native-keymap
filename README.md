@@ -104,7 +104,7 @@ Example output when using German (Swiss) keyboard layout:
 ## Supported OSes
  * linux (X11)
  * windows
- * TODO: mac
+ * mac
 
 ## Developing
  * only tested on `node v4.1.1`

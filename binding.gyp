@@ -25,8 +25,13 @@
         }],
         ['OS=="mac"', {
           "sources": [
-            "src/keyboard_mac.cc"
-          ]
+            "src/keyboard_mac.mm"
+          ],
+          'link_settings' : {
+            'libraries' : [
+              '-framework Cocoa'
+            ]
+          }
         }]
       ]
     }
