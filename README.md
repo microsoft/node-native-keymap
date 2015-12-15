@@ -3,6 +3,8 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 ## Installing
 
+* on linux: `sudo apt-get install libx11-dev`
+
 ```sh
 npm install native-keymap
 ```
@@ -108,7 +110,6 @@ Example output when using German (Swiss) keyboard layout:
 
 ## Developing
  * only tested on `node v4.1.1`
- * on linux: `sudo apt-get install libx11-dev`
  * `npm install -g node-gyp`
  * `node-gyp configure`
  * `node-gyp build`
