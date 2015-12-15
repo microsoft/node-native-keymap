@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexandrudima/vscode-keyboard.git"
+    "url": "git+https://github.com/Microsoft/node-native-keymap.git"
   },
   "author": "Microsoft Corporation",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/alexandrudima/vscode-keyboard/issues"
+    "url": "https://github.com/Microsoft/node-native-keymap/issues"
   },
-  "homepage": "https://github.com/alexandrudima/vscode-keyboard#readme"
+  "homepage": "https://github.com/Microsoft/node-native-keymap#readme"
 }

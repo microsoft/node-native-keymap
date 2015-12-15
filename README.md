@@ -1,4 +1,4 @@
-# OS key mapping node module [![Build Status](https://travis-ci.org/alexandrudima/vscode-keyboard.svg?branch=master)](https://travis-ci.org/alexandrudima/vscode-keyboard)
+# OS key mapping node module [![Build Status](https://travis-ci.org/Microsoft/node-native-keymap.svg?branch=master)](https://travis-ci.org/Microsoft/node-native-keymap)
 Returns what characters are produced by pressing keys with different modifiers on the current system keyboard layout.
 
 ## Installing
@@ -115,5 +115,5 @@ Example output when using German (Swiss) keyboard layout:
  * `npm test`
 
 ## License
-[MIT](https://github.com/alexandrudima/vscode-keyboard/blob/master/License.txt)
+[MIT](https://github.com/Microsoft/node-native-keymap/blob/master/License.txt)
 
