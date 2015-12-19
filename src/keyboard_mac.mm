@@ -60,6 +60,11 @@ std::vector<KeyMapping> GetKeyMapping() {
 
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFDataRef layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
+  if(layout_data == NULL) {
+    // https://developer.apple.com/library/mac/documentation/TextFonts/Reference/TextInputSourcesReference/#//apple_ref/c/func/TISGetInputSourceProperty
+    // might be NULL
+    return result;
+  }
   const UCKeyboardLayout* keyboardLayout = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layout_data));
 
   for (size_t i = 0; i < arraysize(ui::kKeyCodesMap); ++i) {
