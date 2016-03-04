@@ -3,7 +3,8 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 ## Installing
 
-* on linux: `sudo apt-get install libx11-dev`
+* On Debian-based Linux: `sudo apt-get install libx11-dev`
+* On Red Hat-based Linux: `sudo yum install libx11-devel.x86_64 # or .i686`
 
 ```sh
 npm install native-keymap
