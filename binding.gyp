@@ -18,6 +18,21 @@
             ]
           }
         }],
+        ['OS=="freebsd"', {
+          "sources": [
+            "deps/chromium/x/keysym_to_unicode.cc",
+            "src/keyboard_x.cc"
+          ],
+	  "include_dirs": [
+	    "/usr/local/include"
+	  ],
+          "link_settings": {
+            "libraries": [
+              "-lX11",
+	      "-L/usr/local/lib"
+            ]
+          }
+        }],
         ['OS=="win"', {
           "sources": [
             "src/keyboard_win.cc"
