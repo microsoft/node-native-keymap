@@ -5,6 +5,7 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 * On Debian-based Linux: `sudo apt-get install libx11-dev`
 * On Red Hat-based Linux: `sudo yum install libx11-devel.x86_64 # or .i686`
+* On FreeBSD: `sudo pkg install libX11`
 
 ```sh
 npm install native-keymap
@@ -108,6 +109,7 @@ Example output when using German (Swiss) keyboard layout:
  * linux (X11)
  * windows
  * mac
+ * freebsd
 
 ## Developing
  * only tested on `node v4.1.1`
