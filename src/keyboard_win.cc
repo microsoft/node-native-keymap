@@ -185,7 +185,17 @@ ui::KeyboardCode gAllKeyboardCodes[] = {
   ui::KeyboardCode::VKEY_ALTGR,
 };
 
-std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *keyboard_state) {
+void ClearKeyboardBuffer(ui::KeyboardCode key_code, UINT scan_code, BYTE* keyboard_state) {
+  memset(keyboard_state, 0, 256);
+
+  wchar_t chars[5];
+  int code = 0;
+  do {
+    code = ::ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
+  } while(code < 0);
+}
+
+std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *keyboard_state, ui::KeyboardCode clear_key_code, UINT clear_scan_code) {
   memset(keyboard_state, 0, 256);
 
   bool hasModifiers = false;
@@ -216,6 +226,7 @@ std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *k
 
   wchar_t chars[5];
   int code = ::ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
+  ClearKeyboardBuffer(clear_key_code, clear_scan_code, keyboard_state);
 
   if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
     return std::string();
@@ -231,14 +242,16 @@ namespace vscode_keyboard {
 std::vector<KeyMapping> GetKeyMapping() {
   std::vector<KeyMapping> result;
 
+  ui::KeyboardCode clear_key_code = ui::KeyboardCode::VKEY_DECIMAL;
+  UINT clear_scan_code = ::MapVirtualKeyW(clear_key_code, MAPVK_VK_TO_VSC);
   BYTE keyboard_state[256];
   for (size_t i = 0; i < arraysize(gAllKeyboardCodes); ++i) {
     ui::KeyboardCode key_code = gAllKeyboardCodes[i];
 
-    std::string value = GetStrFromKeyPress(key_code, 0, keyboard_state);
-    std::string withShift = GetStrFromKeyPress(key_code, kShiftKeyModifierMask, keyboard_state);
-    std::string withAltGr = GetStrFromKeyPress(key_code, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state);
-    std::string withShiftAltGr = GetStrFromKeyPress(key_code, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state);
+    std::string value = GetStrFromKeyPress(key_code, 0, keyboard_state, clear_key_code, clear_scan_code);
+    std::string withShift = GetStrFromKeyPress(key_code, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    std::string withAltGr = GetStrFromKeyPress(key_code, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    std::string withShiftAltGr = GetStrFromKeyPress(key_code, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
 
     KeyMapping keyMapping = KeyMapping();
     keyMapping.key_code = key_code;
