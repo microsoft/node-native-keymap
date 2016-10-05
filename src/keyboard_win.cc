@@ -198,28 +198,16 @@ void ClearKeyboardBuffer(ui::KeyboardCode key_code, UINT scan_code, BYTE* keyboa
 std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *keyboard_state, ui::KeyboardCode clear_key_code, UINT clear_scan_code) {
   memset(keyboard_state, 0, 256);
 
-  bool hasModifiers = false;
-
   if (modifiers & kShiftKeyModifierMask) {
-    hasModifiers = true;
     keyboard_state[VK_SHIFT] |= 0x80;
   }
 
   if (modifiers & kControlKeyModifierMask) {
-    hasModifiers = true;
     keyboard_state[VK_CONTROL] |= 0x80;
   }
 
   if (modifiers & kAltKeyModifierMask) {
-    hasModifiers = true;
     keyboard_state[VK_MENU] |= 0x80;
-  }
-
-  if (!hasModifiers) {
-    wchar_t key = LOWORD(::MapVirtualKeyW(key_code, MAPVK_VK_TO_CHAR));
-    if (key) {
-      return vscode_keyboard::UTF16toUTF8(&key, 1);
-    }
   }
 
   UINT scan_code = ::MapVirtualKeyW(key_code, MAPVK_VK_TO_VSC);
