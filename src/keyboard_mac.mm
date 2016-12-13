@@ -91,7 +91,12 @@ std::vector<KeyMapping> GetKeyMapping() {
 }
 
 std::string GetCurrentKeyboardLayoutName() {
-  return "";
+  TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
+  CFStringRef sourceId = (CFStringRef) TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
+  if(sourceId == NULL) {
+    return "";
+  }
+  return std::string([(NSString *)sourceId UTF8String]);
 }
 
 } // namespace vscode_keyboard
