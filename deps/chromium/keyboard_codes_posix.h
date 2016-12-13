@@ -1,3 +1,5 @@
+// [13.12.2016] https://cs.chromium.org/chromium/src/ui/events/keycodes/keyboard_codes_win.h
+
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -34,6 +36,7 @@
 namespace ui {
 
 enum KeyboardCode {
+  VKEY_CANCEL = 0x03,
   VKEY_BACK = 0x08,
   VKEY_TAB = 0x09,
   VKEY_BACKTAB = 0x0A,
@@ -195,9 +198,13 @@ enum KeyboardCode {
   VKEY_OEM_104 = 0xE4,  // GTV KEYCODE_MEDIA_FAST_FORWARD
   VKEY_PROCESSKEY = 0xE5,
   VKEY_PACKET = 0xE7,
-  VKEY_DBE_SBCSCHAR = 0xF3,
-  VKEY_DBE_DBCSCHAR = 0xF4,
-  VKEY_ATTN = 0xF6,
+  VKEY_OEM_ATTN = 0xF0,      // JIS DomKey::ALPHANUMERIC
+  VKEY_OEM_FINISH = 0xF1,    // JIS DomKey::KATAKANA
+  VKEY_OEM_COPY = 0xF2,      // JIS DomKey::HIRAGANA
+  VKEY_DBE_SBCSCHAR = 0xF3,  // JIS DomKey::HANKAKU
+  VKEY_DBE_DBCSCHAR = 0xF4,  // JIS DomKey::ZENKAKU
+  VKEY_OEM_BACKTAB = 0xF5,   // JIS DomKey::ROMAJI
+  VKEY_ATTN = 0xF6,          // DomKey::ATTN or JIS DomKey::KANA_MODE
   VKEY_CRSEL = 0xF7,
   VKEY_EXSEL = 0xF8,
   VKEY_EREOF = 0xF9,
@@ -226,6 +233,6 @@ enum KeyboardCode {
   VKEY_COMPOSE = 0xE6,
 };
 
-}  // namespace vscode_keyboard
+}  // namespace ui
 
 #endif  // UI_EVENTS_KEYCODES_KEYBOARD_CODES_POSIX_H_

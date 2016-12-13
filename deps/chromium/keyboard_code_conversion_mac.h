@@ -1,3 +1,5 @@
+// [13.12.2016] https://cs.chromium.org/chromium/src/ui/events/keycodes/keyboard_code_conversion_mac.mm
+
 // Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -11,6 +13,11 @@
 #include "keyboard_codes.h"
 
 namespace ui {
+
+// This value is not defined but shows up as 0x36.
+const int kVK_RightCommand = 0x36;
+// Context menu is not defined but shows up as 0x6E.
+const int kVK_ContextMenu = 0x6E;
 
 // A struct to hold a Windows keycode to Mac virtual keycode mapping.
 struct KeyCodeMap {
@@ -97,8 +104,8 @@ const KeyCodeMap kKeyCodesMap[] = {
   { VKEY_Y /* 0x59 */, kVK_ANSI_Y, 'y' },
   { VKEY_Z /* 0x5A */, kVK_ANSI_Z, 'z' },
   { VKEY_LWIN /* 0x5B */, kVK_Command, 0 },
-  { VKEY_RWIN /* 0x5C */, 0x36, 0 },
-  { VKEY_APPS /* 0x5D */, 0x36, 0 },
+  { VKEY_RWIN /* 0x5C */, kVK_RightCommand, 0 },
+  { VKEY_APPS /* 0x5D */, kVK_RightCommand, 0 },
   { VKEY_SLEEP /* 0x5F */, -1, 0 },
   { VKEY_NUMPAD0 /* 0x60 */, kVK_ANSI_Keypad0, '0' },
   { VKEY_NUMPAD1 /* 0x61 */, kVK_ANSI_Keypad1, '1' },

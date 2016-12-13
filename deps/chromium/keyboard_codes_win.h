@@ -1,3 +1,5 @@
+// [13.12.2016] https://cs.chromium.org/chromium/src/ui/events/keycodes/keyboard_codes_win.h
+
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -11,6 +13,7 @@
 namespace ui {
 
 enum KeyboardCode {
+  VKEY_CANCEL = VK_CANCEL,
   VKEY_BACK = VK_BACK,
   VKEY_TAB = VK_TAB,
   VKEY_CLEAR = VK_CLEAR,
@@ -169,8 +172,12 @@ enum KeyboardCode {
   VKEY_OEM_102 = VK_OEM_102,
   VKEY_PROCESSKEY = VK_PROCESSKEY,
   VKEY_PACKET = VK_PACKET,
+  VKEY_OEM_ATTN = VK_OEM_ATTN,
+  VKEY_OEM_FINISH = VK_OEM_FINISH,
+  VKEY_OEM_COPY = VK_OEM_COPY,
   VKEY_DBE_SBCSCHAR = VK_DBE_SBCSCHAR,
   VKEY_DBE_DBCSCHAR = VK_DBE_DBCSCHAR,
+  VKEY_OEM_BACKTAB = VK_OEM_BACKTAB,
   VKEY_ATTN = VK_ATTN,
   VKEY_CRSEL = VK_CRSEL,
   VKEY_EXSEL = VK_EXSEL,
@@ -187,6 +194,6 @@ enum KeyboardCode {
   VKEY_ALTGR = VK_OEM_AX,
 };
 
-}  // namespace vscode_keyboard
+}  // namespace ui
 
 #endif  // UI_EVENTS_KEYCODES_KEYBOARD_CODES_WIN_H_
