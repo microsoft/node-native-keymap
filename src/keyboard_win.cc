@@ -81,8 +81,39 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
 
+std::string GetStringRegKey(std::string path, std::string name) {
+  std::string result = "";
+
+  HKEY hKey;
+  if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &hKey)) {
+    return result;
+  }
+
+  char szBuffer[512];
+  DWORD dwBufferSize = sizeof(szBuffer);
+
+  if (ERROR_SUCCESS == RegQueryValueEx(hKey, name.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize)) {
+    result = szBuffer;
+  }
+
+  RegCloseKey(hKey);
+
+  return result;
+}
+
 std::string GetCurrentKeyboardLayoutName() {
-  return "";
+
+  char chr_layout_name[KL_NAMELENGTH];
+  if (!GetKeyboardLayoutName(chr_layout_name)) {
+    return "";
+  }
+  std::string layout_name = chr_layout_name;
+
+  // https://technet.microsoft.com/en-us/library/dd744319(v=ws.10).aspx
+  std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
+  std::string layout_id = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Id");
+
+  return layout_name + "," + layout_id + "," + layout_text;
 }
 
 }  // namespace vscode_keyboard

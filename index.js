@@ -3,19 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-var keymapping = null;
-var tried = false;
+var getNativeModuleSafe = (function() {
+  var keymapping = null;
+  var tried = false;
+  return function getNativeModuleSafe() {
+    if (!tried) {
+      tried = true;
+      try {
+        keymapping = require('./build/Release/keymapping');
+      } catch(err) {
+        console.error(err);
+      }
+    }
+    return keymapping;
+  }
+})();
 
 exports.getKeyMap = function() {
-  if (!tried) {
-    tried = true;
-    try {
-      keymapping = require('./build/Release/keymapping');
-    } catch(err) {
-      console.error(err);
-    }
-  }
-
+  var keymapping = getNativeModuleSafe();
   if (!keymapping) {
     return [];
   }
@@ -28,3 +33,18 @@ exports.getKeyMap = function() {
   }
   return r;
 };
+
+exports.getCurrentKeyboardLayoutName = function() {
+  var keymapping = getNativeModuleSafe();
+  if (!keymapping) {
+    return '';
+  }
+
+  var r = '';
+  try {
+    r = keymapping.getCurrentKeyboardLayoutName();
+  } catch (err) {
+    console.error(err);
+  }
+  return r;
+}
