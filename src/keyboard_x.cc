@@ -178,4 +178,8 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
 
+std::string GetCurrentKeyboardLayoutName() {
+  return "";
+}
+
 } // namespace vscode_keyboard

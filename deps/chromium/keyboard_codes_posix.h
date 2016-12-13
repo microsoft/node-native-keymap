@@ -235,7 +235,7 @@ enum KeyboardCode {
   VKEY_COMPOSE = 0xE6,
 };
 
-const std::map<int, std::string> gKeyboardCodeToStringMap = {
+const std::pair<KeyboardCode, std::string> gKeyboardCodeToStringMap[] = {
   std::make_pair(VKEY_CANCEL, "VKEY_CANCEL"),
   std::make_pair(VKEY_BACK, "VKEY_BACK"),
   std::make_pair(VKEY_TAB, "VKEY_TAB"),

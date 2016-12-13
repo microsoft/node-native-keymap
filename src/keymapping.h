@@ -23,6 +23,8 @@ typedef struct KeyMapping KeyMapping;
 
 std::vector<KeyMapping> GetKeyMapping();
 
+std::string GetCurrentKeyboardLayoutName();
+
 }  // namespace vscode_keyboard
 
 #endif  // KEYMAPPING_H_

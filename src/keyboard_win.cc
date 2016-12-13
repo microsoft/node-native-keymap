@@ -59,8 +59,10 @@ std::vector<KeyMapping> GetKeyMapping() {
   ui::KeyboardCode clear_key_code = ui::KeyboardCode::VKEY_DECIMAL;
   UINT clear_scan_code = ::MapVirtualKeyW(clear_key_code, MAPVK_VK_TO_VSC);
   BYTE keyboard_state[256];
-  for (std::map<int, std::string>::const_iterator iterator = ui::gKeyboardCodeToStringMap.begin(); iterator != ui::gKeyboardCodeToStringMap.end(); iterator++) {
-    ui::KeyboardCode key_code = (ui::KeyboardCode)iterator->first;
+
+  size_t cnt = sizeof(ui::gKeyboardCodeToStringMap) / sizeof(ui::gKeyboardCodeToStringMap[0]);
+  for (size_t i = 0; i < cnt; ++i) {
+    ui::KeyboardCode key_code = ui::gKeyboardCodeToStringMap[i].first;
 
     std::string value = GetStrFromKeyPress(key_code, 0, keyboard_state, clear_key_code, clear_scan_code);
     std::string withShift = GetStrFromKeyPress(key_code, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
@@ -77,6 +79,10 @@ std::vector<KeyMapping> GetKeyMapping() {
   }
 
   return result;
+}
+
+std::string GetCurrentKeyboardLayoutName() {
+  return "";
 }
 
 }  // namespace vscode_keyboard
