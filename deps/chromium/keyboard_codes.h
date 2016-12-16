@@ -5,12 +5,6 @@
 #ifndef UI_EVENTS_KEYCODES_KEYBOARD_CODES_H_
 #define UI_EVENTS_KEYCODES_KEYBOARD_CODES_H_
 
-#ifdef _WIN32
-#include "keyboard_codes_win.h"
-#else
-#include "keyboard_codes_posix.h"
-#endif
-
 // Specifies modifier keys as stated in
 // third_party/WebKit/Source/WebCore/inspector/Inspector.json.
 // Notice: |kNumLockKeyModifierMask| is for usage in the key_converter.cc

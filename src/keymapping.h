@@ -32,15 +32,6 @@ typedef struct {
   const char* code;
 } KeycodeMapEntry;
 
-// struct KeyMapping {
-//   ui::KeyboardCode key_code;
-//   std::string value;
-//   std::string withShift;
-//   std::string withAltGr;
-//   std::string withShiftAltGr;
-// };
-// typedef struct KeyMapping KeyMapping;
-
 void _GetKeyMap(const v8::FunctionCallbackInfo<v8::Value>& args);
 void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
 

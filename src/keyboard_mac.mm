@@ -8,7 +8,6 @@
 
 #include "string_conversion.h"
 #include "keymapping.h"
-#include "../deps/chromium/keyboard_code_conversion_mac.h"
 #include "../deps/chromium/macros.h"
 
 namespace {

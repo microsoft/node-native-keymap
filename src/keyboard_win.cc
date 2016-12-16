@@ -8,10 +8,12 @@
 #include "../deps/chromium/macros.h"
 
 #include "string_conversion.h"
+#include <windows.h>
+#include <ime.h>
 
 namespace {
 
-void ClearKeyboardBuffer(ui::KeyboardCode key_code, UINT scan_code, BYTE* keyboard_state) {
+void ClearKeyboardBuffer(UINT key_code, UINT scan_code, BYTE* keyboard_state) {
   memset(keyboard_state, 0, 256);
 
   wchar_t chars[5];
@@ -21,7 +23,7 @@ void ClearKeyboardBuffer(ui::KeyboardCode key_code, UINT scan_code, BYTE* keyboa
   } while(code < 0);
 }
 
-std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *keyboard_state, ui::KeyboardCode clear_key_code, UINT clear_scan_code) {
+std::string GetStrFromKeyPress(UINT key_code, int modifiers, BYTE *keyboard_state, UINT clear_key_code, UINT clear_scan_code) {
   memset(keyboard_state, 0, 256);
 
   if (modifiers & kShiftKeyModifierMask) {
@@ -53,32 +55,61 @@ std::string GetStrFromKeyPress(ui::KeyboardCode key_code, int modifiers, BYTE *k
 
 namespace vscode_keyboard {
 
-std::vector<KeyMapping> GetKeyMapping() {
-  std::vector<KeyMapping> result;
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Array;
+using v8::Value;
+using v8::Null;
 
-  ui::KeyboardCode clear_key_code = ui::KeyboardCode::VKEY_DECIMAL;
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, win, code}
+#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#include "../deps/chromium/keycode_converter_data.inc"
+#undef USB_KEYMAP
+#undef USB_KEYMAP_DECLARATION
+
+void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  Local<Object> result = Object::New(isolate);
+  Local<String> _value = String::NewFromUtf8(isolate, "value");
+  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
+  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
+  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+
+  UINT clear_key_code = VK_DECIMAL;
   UINT clear_scan_code = ::MapVirtualKeyW(clear_key_code, MAPVK_VK_TO_VSC);
   BYTE keyboard_state[256];
 
-  size_t cnt = sizeof(ui::gKeyboardCodeToStringMap) / sizeof(ui::gKeyboardCodeToStringMap[0]);
+  size_t cnt = sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]);
   for (size_t i = 0; i < cnt; ++i) {
-    ui::KeyboardCode key_code = ui::gKeyboardCodeToStringMap[i].first;
+    const char *code = usb_keycode_map[i].code;
+    int native_scancode = usb_keycode_map[i].native_keycode;
 
-    std::string value = GetStrFromKeyPress(key_code, 0, keyboard_state, clear_key_code, clear_scan_code);
-    std::string withShift = GetStrFromKeyPress(key_code, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-    std::string withAltGr = GetStrFromKeyPress(key_code, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-    std::string withShiftAltGr = GetStrFromKeyPress(key_code, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    if (!code || native_scancode <= 0) {
+      continue;
+    }
 
-    KeyMapping keyMapping = KeyMapping();
-    keyMapping.key_code = key_code;
-    keyMapping.value = value;
-    keyMapping.withShift = withShift;
-    keyMapping.withAltGr = withAltGr;
-    keyMapping.withShiftAltGr = withShiftAltGr;
-    result.push_back(keyMapping);
+    int native_keycode = ::MapVirtualKeyW(native_scancode, MAPVK_VSC_TO_VK);
+
+    Local<Object> entry = Object::New(isolate);
+
+    std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state, clear_key_code, clear_scan_code);
+    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+
+    std::string withShift = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+
+    std::string withAltGr = GetStrFromKeyPress(native_keycode, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+
+    std::string withShiftAltGr = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+
+    result->Set(String::NewFromUtf8(isolate, code), entry);
   }
-
-  return result;
+  args.GetReturnValue().Set(result);
 }
 
 std::string GetStringRegKey(std::string path, std::string name) {
@@ -100,15 +131,6 @@ std::string GetStringRegKey(std::string path, std::string name) {
 
   return result;
 }
-
-using v8::FunctionCallbackInfo;
-using v8::Isolate;
-using v8::Local;
-using v8::Object;
-using v8::String;
-using v8::Array;
-using v8::Value;
-using v8::Null;
 
 void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
