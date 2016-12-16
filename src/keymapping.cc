@@ -49,7 +49,7 @@ using v8::Value;
 void AddEntry(Isolate* isolate, std::vector<Local<Object>> &result, std::string key_code, Local<String> value, Local<String> withShift, Local<String> withAltGr, Local<String> withShiftAltGr) {
   Local<Object> entry = Object::New(isolate);
 
-  entry->Set(String::NewFromUtf8(isolate, "key_code"), String::NewFromUtf8(isolate, key_code.c_str()));
+  entry->Set(String::NewFromUtf8(isolate, "keyCode"), String::NewFromUtf8(isolate, key_code.c_str()));
   entry->Set(String::NewFromUtf8(isolate, "value"), value);
   entry->Set(String::NewFromUtf8(isolate, "withShift"), withShift);
   entry->Set(String::NewFromUtf8(isolate, "withAltGr"), withAltGr);
@@ -93,17 +93,9 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(resultArr);
 }
 
-void _GetCurrentKeyboardLayoutName(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-
-  std::string keyboard_layout_name = GetCurrentKeyboardLayoutName();
-
-  args.GetReturnValue().Set(String::NewFromUtf8(isolate, keyboard_layout_name.c_str()));
-}
-
 void init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "getKeyMap", _GetKeyMap);
-  NODE_SET_METHOD(exports, "getCurrentKeyboardLayoutName", _GetCurrentKeyboardLayoutName);
+  NODE_SET_METHOD(exports, "getCurrentKeyboardLayout", _GetCurrentKeyboardLayout);
 }
 
 NODE_MODULE(addon, init)

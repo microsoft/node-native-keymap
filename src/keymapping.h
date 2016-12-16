@@ -6,6 +6,7 @@
 #ifndef KEYMAPPING_H_
 #define KEYMAPPING_H_
 
+#include <node.h>
 #include <string>
 #include <vector>
 #include "../deps/chromium/keyboard_codes.h"
@@ -23,7 +24,7 @@ typedef struct KeyMapping KeyMapping;
 
 std::vector<KeyMapping> GetKeyMapping();
 
-std::string GetCurrentKeyboardLayoutName();
+void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 }  // namespace vscode_keyboard
 

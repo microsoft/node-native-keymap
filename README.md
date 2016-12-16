@@ -3,7 +3,7 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 ## Installing
 
-* On Debian-based Linux: `sudo apt-get install libx11-dev`
+* On Debian-based Linux: `sudo apt-get install libx11-dev libxkbfile-dev`
 * On Red Hat-based Linux: `sudo yum install libx11-devel.x86_64 # or .i686`
 * On FreeBSD: `sudo pkg install libX11`
 
@@ -112,12 +112,11 @@ Example output when using German (Swiss) keyboard layout:
  * freebsd
 
 ## Developing
- * only tested on `node v4.1.1`
+ * only tested on `node v6.x`
  * `npm install -g node-gyp`
- * `node-gyp configure`
+ * `node-gyp configure` (for debugging use `node-gyp configure -d`)
  * `node-gyp build`
- * `npm test`
+ * `npm test` (for debugging change `index.js` to load the node module from the `Debug` folder and press `F5`)
 
 ## License
 [MIT](https://github.com/Microsoft/node-native-keymap/blob/master/License.txt)
-

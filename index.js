@@ -3,48 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-var getNativeModuleSafe = (function() {
-  var keymapping = null;
-  var tried = false;
-  return function getNativeModuleSafe() {
-    if (!tried) {
-      tried = true;
-      try {
-        keymapping = require('./build/Release/keymapping');
-      } catch(err) {
-        console.error(err);
-      }
-    }
-    return keymapping;
+function NativeBinding() {
+  this._tried = false;
+  this._keymapping = null;
+}
+NativeBinding.prototype._init = function() {
+  if (this._tried) {
+    return;
   }
-})();
-
-exports.getKeyMap = function() {
-  var keymapping = getNativeModuleSafe();
-  if (!keymapping) {
-    return [];
-  }
-
-  var r = [];
+  this._tried = true;
+  this._keymapping = require('./build/Release/keymapping');
+};
+NativeBinding.prototype.getKeyMap = function() {
   try {
-    r = keymapping.getKeyMap();
+    this._init();
+    return this._keymapping.getKeyMap();
   } catch(err) {
     console.error(err);
+    return [];
   }
-  return r;
+};
+NativeBinding.prototype.getCurrentKeyboardLayout = function() {
+  try {
+    this._init();
+    return this._keymapping.getCurrentKeyboardLayout();
+  } catch(err) {
+    console.error(err);
+    return null;
+  }
 };
 
-exports.getCurrentKeyboardLayoutName = function() {
-  var keymapping = getNativeModuleSafe();
-  if (!keymapping) {
-    return '';
-  }
+var binding = new NativeBinding();
 
-  var r = '';
-  try {
-    r = keymapping.getCurrentKeyboardLayoutName();
-  } catch (err) {
-    console.error(err);
-  }
-  return r;
-}
+exports.getCurrentKeyboardLayout = function() {
+  return binding.getCurrentKeyboardLayout();
+};
+exports.getKeyMap = function() {
+  return binding.getKeyMap();
+};

@@ -101,19 +101,34 @@ std::string GetStringRegKey(std::string path, std::string name) {
   return result;
 }
 
-std::string GetCurrentKeyboardLayoutName() {
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Array;
+using v8::Value;
+using v8::Null;
+
+void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  Isolate* isolate = args.GetIsolate();
 
   char chr_layout_name[KL_NAMELENGTH];
   if (!GetKeyboardLayoutName(chr_layout_name)) {
-    return "";
+    args.GetReturnValue().Set(Null(isolate));
+    return;
   }
   std::string layout_name = chr_layout_name;
 
   // https://technet.microsoft.com/en-us/library/dd744319(v=ws.10).aspx
-  std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
   std::string layout_id = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Id");
+  std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
 
-  return layout_name + "," + layout_id + "," + layout_text;
+  Local<Object> result = Object::New(isolate);
+  result->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, layout_name));
+  result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, layout_id));
+  result->Set(String::NewFromUtf8(isolate, "text"), String::NewFromUtf8(isolate, layout_text));
+  args.GetReturnValue().Set(result);
 }
 
 }  // namespace vscode_keyboard

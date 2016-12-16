@@ -14,7 +14,8 @@
           ],
           "link_settings": {
             "libraries": [
-              "-lX11"
+              "-lX11",
+              "-lxkbfile"
             ]
           }
         }],
@@ -29,6 +30,7 @@
           "link_settings": {
             "libraries": [
               "-lX11",
+              "-lxkbfile",
               "-L/usr/local/lib"
             ]
           }
