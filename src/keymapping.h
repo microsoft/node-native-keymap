@@ -13,17 +13,35 @@
 
 namespace vscode_keyboard {
 
-struct KeyMapping {
-  ui::KeyboardCode key_code;
-  std::string value;
-  std::string withShift;
-  std::string withAltGr;
-  std::string withShiftAltGr;
-};
-typedef struct KeyMapping KeyMapping;
+// This structure is used to define the keycode mapping table.
+// It is defined here because the unittests need access to it.
+typedef struct {
+  // USB keycode:
+  //  Upper 16-bits: USB Usage Page.
+  //  Lower 16-bits: USB Usage Id: Assigned ID within this usage page.
+  uint32_t usb_keycode;
 
-std::vector<KeyMapping> GetKeyMapping();
+  // Contains one of the following:
+  //  On Linux: XKB scancode
+  //  On Windows: Windows OEM scancode
+  //  On Mac: Mac keycode
+  int native_keycode;
 
+  // The UIEvents (aka: DOM4Events) |code| value as defined in:
+  // http://www.w3.org/TR/DOM-Level-3-Events-code/
+  const char* code;
+} KeycodeMapEntry;
+
+// struct KeyMapping {
+//   ui::KeyboardCode key_code;
+//   std::string value;
+//   std::string withShift;
+//   std::string withAltGr;
+//   std::string withShiftAltGr;
+// };
+// typedef struct KeyMapping KeyMapping;
+
+void _GetKeyMap(const v8::FunctionCallbackInfo<v8::Value>& args);
 void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 }  // namespace vscode_keyboard

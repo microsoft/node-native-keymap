@@ -46,47 +46,47 @@ using v8::String;
 using v8::Array;
 using v8::Value;
 
-void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-  Local<String> _keyCode = String::NewFromUtf8(isolate, "keyCode");
-  Local<String> _value = String::NewFromUtf8(isolate, "value");
-  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
-  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
-  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+// void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+//   Isolate* isolate = args.GetIsolate();
+//   Local<String> _keyCode = String::NewFromUtf8(isolate, "keyCode");
+//   Local<String> _value = String::NewFromUtf8(isolate, "value");
+//   Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
+//   Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
+//   Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
 
-  std::vector<KeyMapping> mapping = GetKeyMapping();
+//   std::vector<KeyMapping> mapping = GetKeyMapping();
 
-  std::vector<Local<Object>> result;
-  for(std::vector<KeyMapping>::iterator it = mapping.begin(); it != mapping.end(); ++it) {
-    if (it->value.length() == 0 && it->withShift.length() == 0 && it->withAltGr.length() == 0 && it->withShiftAltGr.length() == 0) {
-      continue;
-    }
+//   std::vector<Local<Object>> result;
+//   for(std::vector<KeyMapping>::iterator it = mapping.begin(); it != mapping.end(); ++it) {
+//     if (it->value.length() == 0 && it->withShift.length() == 0 && it->withAltGr.length() == 0 && it->withShiftAltGr.length() == 0) {
+//       continue;
+//     }
 
-    std::string keyCode = KeyboardCodeToString::GetInstance().ToString(it->key_code);
-    if (keyCode == "") {
-      // unknown key code?
-      continue;
-    }
+//     std::string keyCode = KeyboardCodeToString::GetInstance().ToString(it->key_code);
+//     if (keyCode == "") {
+//       // unknown key code?
+//       continue;
+//     }
 
-    Local<Object> entry = Object::New(isolate);
+//     Local<Object> entry = Object::New(isolate);
 
-    entry->Set(_keyCode, String::NewFromUtf8(isolate, keyCode.c_str()));
-    entry->Set(_value, String::NewFromUtf8(isolate, it->value.c_str()));
-    entry->Set(_withShift, String::NewFromUtf8(isolate, it->withShift.c_str()));
-    entry->Set(_withAltGr, String::NewFromUtf8(isolate, it->withAltGr.c_str()));
-    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, it->withShiftAltGr.c_str()));
+//     entry->Set(_keyCode, String::NewFromUtf8(isolate, keyCode.c_str()));
+//     entry->Set(_value, String::NewFromUtf8(isolate, it->value.c_str()));
+//     entry->Set(_withShift, String::NewFromUtf8(isolate, it->withShift.c_str()));
+//     entry->Set(_withAltGr, String::NewFromUtf8(isolate, it->withAltGr.c_str()));
+//     entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, it->withShiftAltGr.c_str()));
 
-    result.push_back(entry);
-  }
+//     result.push_back(entry);
+//   }
 
-  int resultCount = (int)result.size();
-  Local<Array> resultArr = Array::New(isolate, resultCount);
-  for (int index = 0; index < resultCount; index++) {
-    resultArr->Set(index, result[index]);
-  }
+//   int resultCount = (int)result.size();
+//   Local<Array> resultArr = Array::New(isolate, resultCount);
+//   for (int index = 0; index < resultCount; index++) {
+//     resultArr->Set(index, result[index]);
+//   }
 
-  args.GetReturnValue().Set(resultArr);
-}
+//   args.GetReturnValue().Set(resultArr);
+// }
 
 void init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "getKeyMap", _GetKeyMap);

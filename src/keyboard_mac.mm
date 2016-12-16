@@ -55,40 +55,6 @@ std::string ConvertKeyCodeToText(const UCKeyboardLayout* keyboardLayout, int mac
 
 namespace vscode_keyboard {
 
-std::vector<KeyMapping> GetKeyMapping() {
-  std::vector<KeyMapping> result;
-
-  TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
-  CFDataRef layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
-  if(layout_data == NULL) {
-    // https://developer.apple.com/library/mac/documentation/TextFonts/Reference/TextInputSourcesReference/#//apple_ref/c/func/TISGetInputSourceProperty
-    // might be NULL
-    return result;
-  }
-  const UCKeyboardLayout* keyboardLayout = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layout_data));
-
-  for (size_t i = 0; i < arraysize(ui::kKeyCodesMap); ++i) {
-    ui::KeyboardCode key_code = ui::kKeyCodesMap[i].keycode;
-    int mac_key_code = ui::kKeyCodesMap[i].macKeycode;
-    if(mac_key_code < 0) {
-      continue;
-    }
-
-    std::string value = ConvertKeyCodeToText(keyboardLayout, mac_key_code, 0);
-    std::string withShift = ConvertKeyCodeToText(keyboardLayout, mac_key_code, kShiftKeyModifierMask);
-    std::string withAltGr = ConvertKeyCodeToText(keyboardLayout, mac_key_code, kAltKeyModifierMask);
-    std::string withShiftAltGr = ConvertKeyCodeToText(keyboardLayout, mac_key_code, kShiftKeyModifierMask | kAltKeyModifierMask);
-
-    KeyMapping keyMapping = KeyMapping();
-    keyMapping.key_code = key_code;
-    keyMapping.value = value;
-    keyMapping.withShift = withShift;
-    keyMapping.withAltGr = withAltGr;
-    keyMapping.withShiftAltGr = withShiftAltGr;
-    result.push_back(keyMapping);
-  }
-  return result;
-}
 
 using v8::FunctionCallbackInfo;
 using v8::Isolate;
@@ -98,6 +64,59 @@ using v8::String;
 using v8::Array;
 using v8::Value;
 using v8::Null;
+
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, mac, code}
+#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#include "../deps/chromium/keycode_converter_data.inc"
+#undef USB_KEYMAP
+#undef USB_KEYMAP_DECLARATION
+
+void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  Local<Object> result = Object::New(isolate);
+  Local<String> _value = String::NewFromUtf8(isolate, "value");
+  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
+  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
+  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+
+  TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
+  CFDataRef layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
+  if (!layout_data) {
+    // https://developer.apple.com/library/mac/documentation/TextFonts/Reference/TextInputSourcesReference/#//apple_ref/c/func/TISGetInputSourceProperty
+    args.GetReturnValue().Set(result);
+    return;
+  }
+
+  const UCKeyboardLayout* keyboardLayout = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layout_data));
+
+  size_t cnt = sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]);
+
+  for (size_t i = 0; i < cnt; ++i) {
+    const char *code = usb_keycode_map[i].code;
+    int native_keycode = usb_keycode_map[i].native_keycode;
+
+    if (!code || native_keycode <= 0) {
+      continue;
+    }
+
+    Local<Object> entry = Object::New(isolate);
+
+    std::string value = ConvertKeyCodeToText(keyboardLayout, native_keycode, 0);
+    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+
+    std::string withShift = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask);
+    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+
+    std::string withAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kAltKeyModifierMask);
+    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+
+    std::string withShiftAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask | kAltKeyModifierMask);
+    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+
+    result->Set(String::NewFromUtf8(isolate, code), entry);
+  }
+  args.GetReturnValue().Set(result);
+}
 
 void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();

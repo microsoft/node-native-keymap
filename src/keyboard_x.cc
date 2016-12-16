@@ -13,7 +13,6 @@
 
 #include "../deps/chromium/macros.h"
 #include "../deps/chromium/x/keysym_to_unicode.h"
-#include "../deps/chromium/x/keycode_and_xkeycode.h"
 
 typedef struct _XDisplay XDisplay;
 
@@ -129,12 +128,33 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
-std::vector<KeyMapping> GetKeyMapping() {
-  std::vector<KeyMapping> result;
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Array;
+using v8::Value;
+using v8::Null;
+
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
+#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#include "../deps/chromium/keycode_converter_data.inc"
+#undef USB_KEYMAP
+#undef USB_KEYMAP_DECLARATION
+
+void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  Local<Object> result = Object::New(isolate);
+  Local<String> _value = String::NewFromUtf8(isolate, "value");
+  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
+  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
+  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
 
   Display *display;
   if (!(display = XOpenDisplay(""))) {
-    return result;
+    args.GetReturnValue().Set(result);
+    return;
   }
 
   XEvent event;
@@ -146,51 +166,43 @@ std::vector<KeyMapping> GetKeyMapping() {
   KeyModifierMaskToXModifierMask *mask_provider = &KeyModifierMaskToXModifierMask::GetInstance();
   mask_provider->Initialize(display);
 
-  for (size_t i = 0; i < arraysize(ui::gKeyCodeToXKeyCode); ++i) {
-    ui::KeyboardCode key_code = ui::gKeyCodeToXKeyCode[i].key_code;
-    int x_key_code = ui::gKeyCodeToXKeyCode[i].x_key_code;
+  size_t cnt = sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]);
 
-    key_event->keycode = x_key_code;
+  for (size_t i = 0; i < cnt; ++i) {
+    const char *code = usb_keycode_map[i].code;
+    int native_keycode = usb_keycode_map[i].native_keycode;
 
+    if (!code || native_keycode <= 0) {
+      continue;
+    }
+
+    Local<Object> entry = Object::New(isolate);
+
+    key_event->keycode = native_keycode;
     key_event->state = 0;
     std::string value = GetStrFromXEvent(&event);
+    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
 
     key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
     std::string withShift = GetStrFromXEvent(&event);
+    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
 
     key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
     std::string withAltGr = GetStrFromXEvent(&event);
+    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
 
     key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
     std::string withShiftAltGr = GetStrFromXEvent(&event);
+    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
 
-    KeyMapping keyMapping = KeyMapping();
-    keyMapping.key_code = key_code;
-    keyMapping.value = value;
-    keyMapping.withShift = withShift;
-    keyMapping.withAltGr = withAltGr;
-    keyMapping.withShiftAltGr = withShiftAltGr;
-    result.push_back(keyMapping);
+    result->Set(String::NewFromUtf8(isolate, code), entry);
   }
 
   XFlush(display);
   XCloseDisplay(display);
 
-  return result;
+  args.GetReturnValue().Set(result);
 }
-
-std::string GetCurrentKeyboardLayoutName() {
-  return "";
-}
-
-using v8::FunctionCallbackInfo;
-using v8::Isolate;
-using v8::Local;
-using v8::Object;
-using v8::String;
-using v8::Array;
-using v8::Value;
-using v8::Null;
 
 void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
