@@ -109,7 +109,7 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
     result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, std::string([(NSString *)sourceId UTF8String]).c_str()));
   }
 
-  NSArray* languages = TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
+  NSArray* languages = (NSArray *) TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
   if (languages && [languages count] > 0) {
     NSString* lang = [languages objectAtIndex:0];
     if (lang) {
