@@ -125,9 +125,9 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
   std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
 
   Local<Object> result = Object::New(isolate);
-  result->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, layout_name));
-  result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, layout_id));
-  result->Set(String::NewFromUtf8(isolate, "text"), String::NewFromUtf8(isolate, layout_text));
+  result->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, layout_name.c_str()));
+  result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, layout_id.c_str()));
+  result->Set(String::NewFromUtf8(isolate, "text"), String::NewFromUtf8(isolate, layout_text.c_str()));
   args.GetReturnValue().Set(result);
 }
 
