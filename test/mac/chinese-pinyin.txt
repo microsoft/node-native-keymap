@@ -1,0 +1,7 @@
+
+> native-keymap@1.0.0 test /Users/chrmarti/Development/repos/node-native-keymap
+> node test/test.js
+
+getCurrentKeyboardLayout:  { id: 'com.apple.inputmethod.SCIM.ITABC', lang: 'zh-Hans' }
+-------------
+getKeyMap:  {}
