@@ -12,7 +12,7 @@
 
 namespace {
 
-std::string ConvertKeyCodeToText(const UCKeyboardLayout* keyboardLayout, int mac_key_code, int modifiers) {
+std::pair<bool,std::string> ConvertKeyCodeToText(const UCKeyboardLayout* keyboardLayout, int mac_key_code, int modifiers) {
 
   int mac_modifiers = 0;
   if (modifiers & kShiftKeyModifierMask)
@@ -43,11 +43,27 @@ std::string ConvertKeyCodeToText(const UCKeyboardLayout* keyboardLayout, int mac
       &char_count,
       &character);
 
+  bool isDeadKey = false;
+  if (status == noErr && char_count == 0 && dead_key_state != 0) {
+    isDeadKey = true;
+    status = UCKeyTranslate(
+        keyboardLayout,
+        static_cast<UInt16>(mac_key_code),
+        kUCKeyActionDown,
+        modifier_key_state,
+        LMGetKbdLast(),
+        kUCKeyTranslateNoDeadKeysBit,
+        &dead_key_state,
+        1,
+        &char_count,
+        &character);
+  }
+
   if (status == noErr && char_count == 1 && !std::iscntrl(character)) {
     wchar_t value = character;
-    return vscode_keyboard::UTF16toUTF8(&value, 1);
+    return std::make_pair(isDeadKey, vscode_keyboard::UTF16toUTF8(&value, 1));
   }
-  return std::string();
+  return std::make_pair(false, std::string());
 }
 
 } // namespace
@@ -60,6 +76,7 @@ using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::String;
+using v8::Boolean;
 using v8::Array;
 using v8::Value;
 using v8::Null;
@@ -77,6 +94,14 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
   Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
   Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
   Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+
+  Local<String> _valueIsDeadKey = String::NewFromUtf8(isolate, "valueIsDeadKey");
+  Local<String> _withShiftIsDeadKey = String::NewFromUtf8(isolate, "withShiftIsDeadKey");
+  Local<String> _withAltGrIsDeadKey = String::NewFromUtf8(isolate, "withAltGrIsDeadKey");
+  Local<String> _withShiftAltGrIsDeadKey = String::NewFromUtf8(isolate, "withShiftAltGrIsDeadKey");
+
+  Local<Boolean> _true = v8::True(isolate);
+  Local<Boolean> _false = v8::False(isolate);
 
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFDataRef layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
@@ -100,17 +125,21 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
 
     Local<Object> entry = Object::New(isolate);
 
-    std::string value = ConvertKeyCodeToText(keyboardLayout, native_keycode, 0);
-    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+    std::pair<bool,std::string> value = ConvertKeyCodeToText(keyboardLayout, native_keycode, 0);
+    entry->Set(_value, String::NewFromUtf8(isolate, value.second.c_str()));
+    entry->Set(_valueIsDeadKey, value.first ? _true : _false);
 
-    std::string withShift = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask);
-    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+    std::pair<bool,std::string> withShift = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask);
+    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.second.c_str()));
+    entry->Set(_withShiftIsDeadKey, withShift.first ? _true : _false);
 
-    std::string withAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kAltKeyModifierMask);
-    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+    std::pair<bool,std::string> withAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kAltKeyModifierMask);
+    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.second.c_str()));
+    entry->Set(_withAltGrIsDeadKey, withAltGr.first ? _true : _false);
 
-    std::string withShiftAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask | kAltKeyModifierMask);
-    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+    std::pair<bool,std::string> withShiftAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask | kAltKeyModifierMask);
+    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.second.c_str()));
+    entry->Set(_withShiftAltGrIsDeadKey, withShiftAltGr.first ? _true : _false);
 
     result->Set(String::NewFromUtf8(isolate, code), entry);
   }
