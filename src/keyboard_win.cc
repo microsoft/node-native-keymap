@@ -253,4 +253,54 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
 
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Array;
+using v8::Value;
+using v8::Null;
+
+std::string GetStringRegKey(std::string path, std::string name) {
+  std::string result = "";
+
+  HKEY hKey;
+  if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &hKey)) {
+    return result;
+  }
+
+  char szBuffer[512];
+  DWORD dwBufferSize = sizeof(szBuffer);
+
+  if (ERROR_SUCCESS == RegQueryValueEx(hKey, name.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize)) {
+    result = szBuffer;
+  }
+
+  RegCloseKey(hKey);
+
+  return result;
+}
+
+void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+
+  char chr_layout_name[KL_NAMELENGTH];
+  if (!GetKeyboardLayoutName(chr_layout_name)) {
+    args.GetReturnValue().Set(Null(isolate));
+    return;
+  }
+  std::string layout_name = chr_layout_name;
+
+  // https://technet.microsoft.com/en-us/library/dd744319(v=ws.10).aspx
+  std::string layout_id = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Id");
+  std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
+
+  Local<Object> result = Object::New(isolate);
+  result->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, layout_name.c_str()));
+  result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, layout_id.c_str()));
+  result->Set(String::NewFromUtf8(isolate, "text"), String::NewFromUtf8(isolate, layout_text.c_str()));
+  args.GetReturnValue().Set(result);
+}
+
 }  // namespace vscode_keyboard

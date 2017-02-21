@@ -404,6 +404,7 @@ void GetKeyMap(const FunctionCallbackInfo<Value>& args) {
 
 void init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "getKeyMap", GetKeyMap);
+  NODE_SET_METHOD(exports, "getCurrentKeyboardLayout", _GetCurrentKeyboardLayout);
 }
 
 NODE_MODULE(addon, init)

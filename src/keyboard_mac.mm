@@ -90,4 +90,35 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
 
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Boolean;
+using v8::Array;
+using v8::Value;
+using v8::Null;
+
+void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  Local<Object> result = Object::New(isolate);
+
+  TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
+  CFStringRef sourceId = (CFStringRef) TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
+  if(sourceId) {
+    result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, std::string([(NSString *)sourceId UTF8String]).c_str()));
+  }
+
+  NSArray* languages = (NSArray *) TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
+  if (languages && [languages count] > 0) {
+    NSString* lang = [languages objectAtIndex:0];
+    if (lang) {
+      result->Set(String::NewFromUtf8(isolate, "lang"), String::NewFromUtf8(isolate, std::string([lang UTF8String]).c_str()));
+    }
+  }
+
+  args.GetReturnValue().Set(result);
+}
+
 } // namespace vscode_keyboard

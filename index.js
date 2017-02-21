@@ -28,3 +28,26 @@ exports.getKeyMap = function() {
   }
   return r;
 };
+
+exports.getCurrentKeyboardLayout = function() {
+  if (!tried) {
+    tried = true;
+    try {
+      keymapping = require('./build/Release/keymapping');
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  if (!keymapping) {
+    return null;
+  }
+
+  var r = null;
+  try {
+    r = keymapping.getCurrentKeyboardLayout();
+  } catch(err) {
+    console.error(err);
+  }
+  return r;
+};

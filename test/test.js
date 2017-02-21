@@ -5,6 +5,6 @@
 
 var index = require('../index');
 
-var result = index.getKeyMap();
-
-console.log(result);
+console.log(index.getKeyMap());
+console.log('-----------------');
+console.log(index.getCurrentKeyboardLayout());

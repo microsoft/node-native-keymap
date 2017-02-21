@@ -178,4 +178,41 @@ std::vector<KeyMapping> GetKeyMapping() {
   return result;
 }
 
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::Object;
+using v8::String;
+using v8::Array;
+using v8::Value;
+using v8::Null;
+
+void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+
+  Display *display;
+  if (!(display = XOpenDisplay(""))) {
+    args.GetReturnValue().Set(Null(isolate));
+    return;
+  }
+
+  XkbRF_VarDefsRec vdr;
+  char *tmp = NULL;
+  int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
+  if (res) {
+    Local<Object> result = Object::New(isolate);
+    result->Set(String::NewFromUtf8(isolate, "model"), String::NewFromUtf8(isolate, vdr.model ? vdr.model : ""));
+    result->Set(String::NewFromUtf8(isolate, "layout"), String::NewFromUtf8(isolate, vdr.layout ? vdr.layout : ""));
+    result->Set(String::NewFromUtf8(isolate, "variant"), String::NewFromUtf8(isolate, vdr.variant ? vdr.variant : ""));
+    result->Set(String::NewFromUtf8(isolate, "options"), String::NewFromUtf8(isolate, vdr.options ? vdr.options : ""));
+    result->Set(String::NewFromUtf8(isolate, "rules"), String::NewFromUtf8(isolate, tmp ? tmp : ""));
+    args.GetReturnValue().Set(result);
+  } else {
+    args.GetReturnValue().Set(Null(isolate));
+  }
+
+  XFlush(display);
+  XCloseDisplay(display);
+}
+
 } // namespace vscode_keyboard
