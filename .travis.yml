@@ -38,3 +38,4 @@ git:
 branches:
   only:
     - master
+    - 0.x
