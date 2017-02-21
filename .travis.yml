@@ -12,6 +12,8 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.9
+      - libx11-dev
+      - libxkbfile-dev
 
 before_install:
   - git clone https://github.com/creationix/nvm.git ./.nvm
