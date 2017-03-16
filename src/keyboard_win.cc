@@ -70,9 +70,196 @@ using v8::Null;
 #undef USB_KEYMAP
 #undef USB_KEYMAP_DECLARATION
 
+typedef struct {
+	int vkey;
+	const char* str_vkey;
+} VKeyStrEntry;
+
+const char* _VKeyToStr(int vkey) {
+  switch(vkey) {
+    case VK_LBUTTON: return "VK_LBUTTON"; // Left mouse button
+    case VK_RBUTTON: return "VK_RBUTTON"; // Right mouse button
+    case VK_CANCEL: return "VK_CANCEL"; // Control-break processing
+    case VK_MBUTTON: return "VK_MBUTTON"; // Middle mouse button (three-button mouse)
+    case VK_XBUTTON1: return "VK_XBUTTON1"; // X1 mouse button
+    case VK_XBUTTON2: return "VK_XBUTTON2"; // X2 mouse button
+    case VK_BACK: return "VK_BACK"; // BACKSPACE key
+    case VK_TAB: return "VK_TAB"; // TAB key
+    case VK_CLEAR: return "VK_CLEAR"; // CLEAR key
+    case VK_RETURN: return "VK_RETURN"; // ENTER key
+    case VK_SHIFT: return "VK_SHIFT"; // SHIFT key
+    case VK_CONTROL: return "VK_CONTROL"; // CTRL key
+    case VK_MENU: return "VK_MENU"; // ALT key
+    case VK_PAUSE: return "VK_PAUSE"; // PAUSE key
+    case VK_CAPITAL: return "VK_CAPITAL"; // CAPS LOCK key
+    case VK_KANA: return "VK_KANA"; // IME Kana mode
+    //case VK_HANGUL: return "VK_HANGUEL"; // IME Hangul mode
+    case VK_JUNJA: return "VK_JUNJA"; // IME Junja mode
+    case VK_FINAL: return "VK_FINAL"; // IME final mode
+    case VK_HANJA: return "VK_HANJA"; // IME Hanja mode
+    //case VK_KANJI: return "VK_KANJI"; // IME Kanji mode
+    case VK_ESCAPE: return "VK_ESCAPE"; // ESC key
+    case VK_CONVERT: return "VK_CONVERT"; // IME convert
+    case VK_NONCONVERT: return "VK_NONCONVERT"; // IME nonconvert
+    case VK_ACCEPT: return "VK_ACCEPT"; // IME accept
+    case VK_MODECHANGE: return "VK_MODECHANGE"; // IME mode change request
+    case VK_SPACE: return "VK_SPACE"; // SPACEBAR
+    case VK_PRIOR: return "VK_PRIOR"; // PAGE UP key
+    case VK_NEXT: return "VK_NEXT"; // PAGE DOWN key
+    case VK_END: return "VK_END"; // END key
+    case VK_HOME: return "VK_HOME"; // HOME key
+    case VK_LEFT: return "VK_LEFT"; // LEFT ARROW key
+    case VK_UP: return "VK_UP"; // UP ARROW key
+    case VK_RIGHT: return "VK_RIGHT"; // RIGHT ARROW key
+    case VK_DOWN: return "VK_DOWN"; // DOWN ARROW key
+    case VK_SELECT: return "VK_SELECT"; // SELECT key
+    case VK_PRINT: return "VK_PRINT"; // PRINT key
+    case VK_EXECUTE: return "VK_EXECUTE"; // EXECUTE key
+    case VK_SNAPSHOT: return "VK_SNAPSHOT"; // PRINT SCREEN key
+    case VK_INSERT: return "VK_INSERT"; // INS key
+    case VK_DELETE: return "VK_DELETE"; // DEL key
+    case VK_HELP: return "VK_HELP"; // HELP key
+
+    case '0': return "VKEY_0";
+    case '1': return "VKEY_1";
+    case '2': return "VKEY_2";
+    case '3': return "VKEY_3";
+    case '4': return "VKEY_4";
+    case '5': return "VKEY_5";
+    case '6': return "VKEY_6";
+    case '7': return "VKEY_7";
+    case '8': return "VKEY_8";
+    case '9': return "VKEY_9";
+    case 'A': return "VKEY_A";
+    case 'B': return "VKEY_B";
+    case 'C': return "VKEY_C";
+    case 'D': return "VKEY_D";
+    case 'E': return "VKEY_E";
+    case 'F': return "VKEY_F";
+    case 'G': return "VKEY_G";
+    case 'H': return "VKEY_H";
+    case 'I': return "VKEY_I";
+    case 'J': return "VKEY_J";
+    case 'K': return "VKEY_K";
+    case 'L': return "VKEY_L";
+    case 'M': return "VKEY_M";
+    case 'N': return "VKEY_N";
+    case 'O': return "VKEY_O";
+    case 'P': return "VKEY_P";
+    case 'Q': return "VKEY_Q";
+    case 'R': return "VKEY_R";
+    case 'S': return "VKEY_S";
+    case 'T': return "VKEY_T";
+    case 'U': return "VKEY_U";
+    case 'V': return "VKEY_V";
+    case 'W': return "VKEY_W";
+    case 'X': return "VKEY_X";
+    case 'Y': return "VKEY_Y";
+    case 'Z': return "VKEY_Z";
+
+    case VK_LWIN: return "VK_LWIN"; // Left Windows key (Natural keyboard)
+    case VK_RWIN: return "VK_RWIN"; // Right Windows key (Natural keyboard)
+    case VK_APPS: return "VK_APPS"; // Applications key (Natural keyboard)
+    case VK_SLEEP: return "VK_SLEEP"; // Computer Sleep key
+    case VK_NUMPAD0: return "VK_NUMPAD0"; // Numeric keypad 0 key
+    case VK_NUMPAD1: return "VK_NUMPAD1"; // Numeric keypad 1 key
+    case VK_NUMPAD2: return "VK_NUMPAD2"; // Numeric keypad 2 key
+    case VK_NUMPAD3: return "VK_NUMPAD3"; // Numeric keypad 3 key
+    case VK_NUMPAD4: return "VK_NUMPAD4"; // Numeric keypad 4 key
+    case VK_NUMPAD5: return "VK_NUMPAD5"; // Numeric keypad 5 key
+    case VK_NUMPAD6: return "VK_NUMPAD6"; // Numeric keypad 6 key
+    case VK_NUMPAD7: return "VK_NUMPAD7"; // Numeric keypad 7 key
+    case VK_NUMPAD8: return "VK_NUMPAD8"; // Numeric keypad 8 key
+    case VK_NUMPAD9: return "VK_NUMPAD9"; // Numeric keypad 9 key
+    case VK_MULTIPLY: return "VK_MULTIPLY"; // Multiply key
+    case VK_ADD: return "VK_ADD"; // Add key
+    case VK_SEPARATOR: return "VK_SEPARATOR"; // Separator key
+    case VK_SUBTRACT: return "VK_SUBTRACT"; // Subtract key
+    case VK_DECIMAL: return "VK_DECIMAL"; // Decimal key
+    case VK_DIVIDE: return "VK_DIVIDE"; // Divide key
+    case VK_F1: return "VK_F1"; // F1 key
+    case VK_F2: return "VK_F2"; // F2 key
+    case VK_F3: return "VK_F3"; // F3 key
+    case VK_F4: return "VK_F4"; // F4 key
+    case VK_F5: return "VK_F5"; // F5 key
+    case VK_F6: return "VK_F6"; // F6 key
+    case VK_F7: return "VK_F7"; // F7 key
+    case VK_F8: return "VK_F8"; // F8 key
+    case VK_F9: return "VK_F9"; // F9 key
+    case VK_F10: return "VK_F10"; // F10 key
+    case VK_F11: return "VK_F11"; // F11 key
+    case VK_F12: return "VK_F12"; // F12 key
+    case VK_F13: return "VK_F13"; // F13 key
+    case VK_F14: return "VK_F14"; // F14 key
+    case VK_F15: return "VK_F15"; // F15 key
+    case VK_F16: return "VK_F16"; // F16 key
+    case VK_F17: return "VK_F17"; // F17 key
+    case VK_F18: return "VK_F18"; // F18 key
+    case VK_F19: return "VK_F19"; // F19 key
+    case VK_F20: return "VK_F20"; // F20 key
+    case VK_F21: return "VK_F21"; // F21 key
+    case VK_F22: return "VK_F22"; // F22 key
+    case VK_F23: return "VK_F23"; // F23 key
+    case VK_F24: return "VK_F24"; // F24 key
+    case VK_NUMLOCK: return "VK_NUMLOCK"; // NUM LOCK key
+    case VK_SCROLL: return "VK_SCROLL"; // SCROLL LOCK key
+    case VK_LSHIFT: return "VK_LSHIFT"; // Left SHIFT key
+    case VK_RSHIFT: return "VK_RSHIFT"; // Right SHIFT key
+    case VK_LCONTROL: return "VK_LCONTROL"; // Left CONTROL key
+    case VK_RCONTROL: return "VK_RCONTROL"; // Right CONTROL key
+    case VK_LMENU: return "VK_LMENU"; // Left MENU key
+    case VK_RMENU: return "VK_RMENU"; // Right MENU key
+    case VK_BROWSER_BACK: return "VK_BROWSER_BACK"; // Browser Back key
+    case VK_BROWSER_FORWARD: return "VK_BROWSER_FORWARD"; // Browser Forward key
+    case VK_BROWSER_REFRESH: return "VK_BROWSER_REFRESH"; // Browser Refresh key
+    case VK_BROWSER_STOP: return "VK_BROWSER_STOP"; // Browser Stop key
+    case VK_BROWSER_SEARCH: return "VK_BROWSER_SEARCH"; // Browser Search key
+    case VK_BROWSER_FAVORITES: return "VK_BROWSER_FAVORITES"; // Browser Favorites key
+    case VK_BROWSER_HOME: return "VK_BROWSER_HOME"; // Browser Start and Home key
+    case VK_VOLUME_MUTE: return "VK_VOLUME_MUTE"; // Volume Mute key
+    case VK_VOLUME_DOWN: return "VK_VOLUME_DOWN"; // Volume Down key
+    case VK_VOLUME_UP: return "VK_VOLUME_UP"; // Volume Up key
+    case VK_MEDIA_NEXT_TRACK: return "VK_MEDIA_NEXT_TRACK"; // Next Track key
+    case VK_MEDIA_PREV_TRACK: return "VK_MEDIA_PREV_TRACK"; // Previous Track key
+    case VK_MEDIA_STOP: return "VK_MEDIA_STOP"; // Stop Media key
+    case VK_MEDIA_PLAY_PAUSE: return "VK_MEDIA_PLAY_PAUSE"; // Play/Pause Media key
+    case VK_LAUNCH_MAIL: return "VK_LAUNCH_MAIL"; // Start Mail key
+    case VK_LAUNCH_MEDIA_SELECT: return "VK_LAUNCH_MEDIA_SELECT"; // Select Media key
+    case VK_LAUNCH_APP1: return "VK_LAUNCH_APP1"; // Start Application 1 key
+    case VK_LAUNCH_APP2: return "VK_LAUNCH_APP2"; // Start Application 2 key
+    case VK_OEM_1: return "VK_OEM_1"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the ';:' key
+    case VK_OEM_PLUS: return "VK_OEM_PLUS"; // For any country/region, the '+' key
+    case VK_OEM_COMMA: return "VK_OEM_COMMA"; // For any country/region, the ',' key
+    case VK_OEM_MINUS: return "VK_OEM_MINUS"; // For any country/region, the '-' key
+    case VK_OEM_PERIOD: return "VK_OEM_PERIOD"; // For any country/region, the '.' key
+    case VK_OEM_2: return "VK_OEM_2"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '/?' key
+    case VK_OEM_3: return "VK_OEM_3"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '`~' key
+    case VK_OEM_4: return "VK_OEM_4"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '[{' key
+    case VK_OEM_5: return "VK_OEM_5"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '\|' key
+    case VK_OEM_6: return "VK_OEM_6"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the ']}' key
+    case VK_OEM_7: return "VK_OEM_7"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the 'single-quote/double-quote' key
+    case VK_OEM_8: return "VK_OEM_8"; // Used for miscellaneous characters; it can vary by keyboard.
+    case VK_OEM_102: return "VK_OEM_102"; // Either the angle bracket key or the backslash key on the RT 102-key keyboard
+    case VK_PROCESSKEY: return "VK_PROCESSKEY"; // IME PROCESS key
+    case VK_PACKET: return "VK_PACKET"; // Used to pass Unicode characters as if they were keystrokes. The VK_PACKET key is the low word of a 32-bit Virtual Key value used for non-keyboard input methods. For more information, see Remark in KEYBDINPUT, SendInput, WM_KEYDOWN, and WM_KEYUP // 0xE8
+    case VK_ATTN: return "VK_ATTN"; // Attn key
+    case VK_CRSEL: return "VK_CRSEL"; // CrSel key
+    case VK_EXSEL: return "VK_EXSEL"; // ExSel key
+    case VK_EREOF: return "VK_EREOF"; // Erase EOF key
+    case VK_PLAY: return "VK_PLAY"; // Play key
+    case VK_ZOOM: return "VK_ZOOM"; // Zoom key
+    case VK_NONAME: return "VK_NONAME"; // Reserved
+    case VK_PA1: return "VK_PA1"; // PA1 key
+    case VK_OEM_CLEAR: return "VK_OEM_CLEAR"; // Clear key
+  }
+
+  return "VK_UNKNOWN";
+}
+
 void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
   Local<Object> result = Object::New(isolate);
+  Local<String> _vkey = String::NewFromUtf8(isolate, "vkey");
   Local<String> _value = String::NewFromUtf8(isolate, "value");
   Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
   Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
@@ -94,6 +281,8 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
     int native_keycode = ::MapVirtualKeyW(native_scancode, MAPVK_VSC_TO_VK);
 
     Local<Object> entry = Object::New(isolate);
+
+	entry->Set(_vkey, String::NewFromUtf8(isolate, _VKeyToStr(native_keycode)));
 
     std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state, clear_key_code, clear_scan_code);
     entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
