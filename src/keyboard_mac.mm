@@ -119,7 +119,7 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
     const char *code = usb_keycode_map[i].code;
     int native_keycode = usb_keycode_map[i].native_keycode;
 
-    if (!code || native_keycode <= 0) {
+    if (!code || native_keycode >= 0xffff) {
       continue;
     }
 
