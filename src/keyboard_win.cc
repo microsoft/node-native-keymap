@@ -42,6 +42,15 @@ std::string GetStrFromKeyPress(UINT key_code, int modifiers, BYTE *keyboard_stat
 
   wchar_t chars[5];
   int code = ::ToUnicode(key_code, scan_code, keyboard_state, chars, 4, 0);
+
+  if (code == -1) {
+    // dead key
+    if (chars[0] == 0 || iswcntrl(chars[0])) {
+      return std::string();
+    }
+    code = 1;
+  }
+
   ClearKeyboardBuffer(clear_key_code, clear_scan_code, keyboard_state);
 
   if (code <= 0 || (code == 1 && iswcntrl(chars[0]))) {
@@ -71,8 +80,8 @@ using v8::Null;
 #undef USB_KEYMAP_DECLARATION
 
 typedef struct {
-	int vkey;
-	const char* str_vkey;
+  int vkey;
+  const char* str_vkey;
 } VKeyStrEntry;
 
 const char* _VKeyToStr(int vkey) {
@@ -282,7 +291,7 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
 
     Local<Object> entry = Object::New(isolate);
 
-	entry->Set(_vkey, String::NewFromUtf8(isolate, _VKeyToStr(native_keycode)));
+  entry->Set(_vkey, String::NewFromUtf8(isolate, _VKeyToStr(native_keycode)));
 
     std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state, clear_key_code, clear_scan_code);
     entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
