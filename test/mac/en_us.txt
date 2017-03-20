@@ -1,91 +1,19 @@
 
-> native-keymap@1.0.0 test /Users/chrmarti/Development/repos/node-native-keymap
+> native-keymap@1.1.0 test /Users/code/Alex/src/node-native-keymap
 > node test/test.js
 
 getCurrentKeyboardLayout:  { id: 'com.apple.keylayout.US', lang: 'en' }
 -------------
-getKeyMap:  { Hyper:
-   { value: '',
+getKeyMap:  { KeyA: 
+   { value: 'a',
      valueIsDeadKey: false,
-     withShift: '',
+     withShift: 'A',
      withShiftIsDeadKey: false,
-     withAltGr: '',
+     withAltGr: 'å',
      withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
+     withShiftAltGr: 'Å',
      withShiftAltGrIsDeadKey: false },
-  Super:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Fn:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  FnLock:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Suspend:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Resume:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Turbo:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Sleep:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  WakeUp:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  KeyB:
+  KeyB: 
    { value: 'b',
      valueIsDeadKey: false,
      withShift: 'B',
@@ -94,7 +22,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'ı',
      withShiftAltGrIsDeadKey: false },
-  KeyC:
+  KeyC: 
    { value: 'c',
      valueIsDeadKey: false,
      withShift: 'C',
@@ -103,7 +31,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ç',
      withShiftAltGrIsDeadKey: false },
-  KeyD:
+  KeyD: 
    { value: 'd',
      valueIsDeadKey: false,
      withShift: 'D',
@@ -112,7 +40,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Î',
      withShiftAltGrIsDeadKey: false },
-  KeyE:
+  KeyE: 
    { value: 'e',
      valueIsDeadKey: false,
      withShift: 'E',
@@ -121,7 +49,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: true,
      withShiftAltGr: '´',
      withShiftAltGrIsDeadKey: false },
-  KeyF:
+  KeyF: 
    { value: 'f',
      valueIsDeadKey: false,
      withShift: 'F',
@@ -130,7 +58,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ï',
      withShiftAltGrIsDeadKey: false },
-  KeyG:
+  KeyG: 
    { value: 'g',
      valueIsDeadKey: false,
      withShift: 'G',
@@ -139,7 +67,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '˝',
      withShiftAltGrIsDeadKey: false },
-  KeyH:
+  KeyH: 
    { value: 'h',
      valueIsDeadKey: false,
      withShift: 'H',
@@ -148,7 +76,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ó',
      withShiftAltGrIsDeadKey: false },
-  KeyI:
+  KeyI: 
    { value: 'i',
      valueIsDeadKey: false,
      withShift: 'I',
@@ -157,7 +85,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: true,
      withShiftAltGr: 'ˆ',
      withShiftAltGrIsDeadKey: false },
-  KeyJ:
+  KeyJ: 
    { value: 'j',
      valueIsDeadKey: false,
      withShift: 'J',
@@ -166,7 +94,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ô',
      withShiftAltGrIsDeadKey: false },
-  KeyK:
+  KeyK: 
    { value: 'k',
      valueIsDeadKey: false,
      withShift: 'K',
@@ -175,7 +103,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  KeyL:
+  KeyL: 
    { value: 'l',
      valueIsDeadKey: false,
      withShift: 'L',
@@ -184,7 +112,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ò',
      withShiftAltGrIsDeadKey: false },
-  KeyM:
+  KeyM: 
    { value: 'm',
      valueIsDeadKey: false,
      withShift: 'M',
@@ -193,7 +121,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Â',
      withShiftAltGrIsDeadKey: false },
-  KeyN:
+  KeyN: 
    { value: 'n',
      valueIsDeadKey: false,
      withShift: 'N',
@@ -202,7 +130,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: true,
      withShiftAltGr: '˜',
      withShiftAltGrIsDeadKey: false },
-  KeyO:
+  KeyO: 
    { value: 'o',
      valueIsDeadKey: false,
      withShift: 'O',
@@ -211,7 +139,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ø',
      withShiftAltGrIsDeadKey: false },
-  KeyP:
+  KeyP: 
    { value: 'p',
      valueIsDeadKey: false,
      withShift: 'P',
@@ -220,7 +148,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '∏',
      withShiftAltGrIsDeadKey: false },
-  KeyQ:
+  KeyQ: 
    { value: 'q',
      valueIsDeadKey: false,
      withShift: 'Q',
@@ -229,7 +157,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Œ',
      withShiftAltGrIsDeadKey: false },
-  KeyR:
+  KeyR: 
    { value: 'r',
      valueIsDeadKey: false,
      withShift: 'R',
@@ -238,7 +166,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '‰',
      withShiftAltGrIsDeadKey: false },
-  KeyS:
+  KeyS: 
    { value: 's',
      valueIsDeadKey: false,
      withShift: 'S',
@@ -247,7 +175,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Í',
      withShiftAltGrIsDeadKey: false },
-  KeyT:
+  KeyT: 
    { value: 't',
      valueIsDeadKey: false,
      withShift: 'T',
@@ -256,7 +184,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'ˇ',
      withShiftAltGrIsDeadKey: false },
-  KeyU:
+  KeyU: 
    { value: 'u',
      valueIsDeadKey: false,
      withShift: 'U',
@@ -265,7 +193,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: true,
      withShiftAltGr: '¨',
      withShiftAltGrIsDeadKey: false },
-  KeyV:
+  KeyV: 
    { value: 'v',
      valueIsDeadKey: false,
      withShift: 'V',
@@ -274,7 +202,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '◊',
      withShiftAltGrIsDeadKey: false },
-  KeyW:
+  KeyW: 
    { value: 'w',
      valueIsDeadKey: false,
      withShift: 'W',
@@ -283,7 +211,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '„',
      withShiftAltGrIsDeadKey: false },
-  KeyX:
+  KeyX: 
    { value: 'x',
      valueIsDeadKey: false,
      withShift: 'X',
@@ -292,7 +220,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '˛',
      withShiftAltGrIsDeadKey: false },
-  KeyY:
+  KeyY: 
    { value: 'y',
      valueIsDeadKey: false,
      withShift: 'Y',
@@ -301,7 +229,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Á',
      withShiftAltGrIsDeadKey: false },
-  KeyZ:
+  KeyZ: 
    { value: 'z',
      valueIsDeadKey: false,
      withShift: 'Z',
@@ -310,7 +238,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '¸',
      withShiftAltGrIsDeadKey: false },
-  Digit1:
+  Digit1: 
    { value: '1',
      valueIsDeadKey: false,
      withShift: '!',
@@ -319,7 +247,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '⁄',
      withShiftAltGrIsDeadKey: false },
-  Digit2:
+  Digit2: 
    { value: '2',
      valueIsDeadKey: false,
      withShift: '@',
@@ -328,7 +256,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '€',
      withShiftAltGrIsDeadKey: false },
-  Digit3:
+  Digit3: 
    { value: '3',
      valueIsDeadKey: false,
      withShift: '#',
@@ -337,7 +265,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '‹',
      withShiftAltGrIsDeadKey: false },
-  Digit4:
+  Digit4: 
    { value: '4',
      valueIsDeadKey: false,
      withShift: '$',
@@ -346,7 +274,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '›',
      withShiftAltGrIsDeadKey: false },
-  Digit5:
+  Digit5: 
    { value: '5',
      valueIsDeadKey: false,
      withShift: '%',
@@ -355,7 +283,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'ﬁ',
      withShiftAltGrIsDeadKey: false },
-  Digit6:
+  Digit6: 
    { value: '6',
      valueIsDeadKey: false,
      withShift: '^',
@@ -364,7 +292,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'ﬂ',
      withShiftAltGrIsDeadKey: false },
-  Digit7:
+  Digit7: 
    { value: '7',
      valueIsDeadKey: false,
      withShift: '&',
@@ -373,7 +301,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '‡',
      withShiftAltGrIsDeadKey: false },
-  Digit8:
+  Digit8: 
    { value: '8',
      valueIsDeadKey: false,
      withShift: '*',
@@ -382,7 +310,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '°',
      withShiftAltGrIsDeadKey: false },
-  Digit9:
+  Digit9: 
    { value: '9',
      valueIsDeadKey: false,
      withShift: '(',
@@ -391,7 +319,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '·',
      withShiftAltGrIsDeadKey: false },
-  Digit0:
+  Digit0: 
    { value: '0',
      valueIsDeadKey: false,
      withShift: ')',
@@ -400,7 +328,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '‚',
      withShiftAltGrIsDeadKey: false },
-  Enter:
+  Enter: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -409,7 +337,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Escape:
+  Escape: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -418,7 +346,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Backspace:
+  Backspace: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -427,7 +355,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Tab:
+  Tab: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -436,7 +364,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Space:
+  Space: 
    { value: ' ',
      valueIsDeadKey: false,
      withShift: ' ',
@@ -445,7 +373,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: ' ',
      withShiftAltGrIsDeadKey: false },
-  Minus:
+  Minus: 
    { value: '-',
      valueIsDeadKey: false,
      withShift: '_',
@@ -454,7 +382,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '—',
      withShiftAltGrIsDeadKey: false },
-  Equal:
+  Equal: 
    { value: '=',
      valueIsDeadKey: false,
      withShift: '+',
@@ -463,7 +391,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '±',
      withShiftAltGrIsDeadKey: false },
-  BracketLeft:
+  BracketLeft: 
    { value: '[',
      valueIsDeadKey: false,
      withShift: '{',
@@ -472,7 +400,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '”',
      withShiftAltGrIsDeadKey: false },
-  BracketRight:
+  BracketRight: 
    { value: ']',
      valueIsDeadKey: false,
      withShift: '}',
@@ -481,7 +409,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '’',
      withShiftAltGrIsDeadKey: false },
-  Backslash:
+  Backslash: 
    { value: '\\',
      valueIsDeadKey: false,
      withShift: '|',
@@ -490,16 +418,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '»',
      withShiftAltGrIsDeadKey: false },
-  IntlHash:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Semicolon:
+  Semicolon: 
    { value: ';',
      valueIsDeadKey: false,
      withShift: ':',
@@ -508,7 +427,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Ú',
      withShiftAltGrIsDeadKey: false },
-  Quote:
+  Quote: 
    { value: '\'',
      valueIsDeadKey: false,
      withShift: '"',
@@ -517,7 +436,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: 'Æ',
      withShiftAltGrIsDeadKey: false },
-  Backquote:
+  Backquote: 
    { value: '`',
      valueIsDeadKey: false,
      withShift: '~',
@@ -526,7 +445,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: true,
      withShiftAltGr: '`',
      withShiftAltGrIsDeadKey: false },
-  Comma:
+  Comma: 
    { value: ',',
      valueIsDeadKey: false,
      withShift: '<',
@@ -535,7 +454,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '¯',
      withShiftAltGrIsDeadKey: false },
-  Period:
+  Period: 
    { value: '.',
      valueIsDeadKey: false,
      withShift: '>',
@@ -544,7 +463,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '˘',
      withShiftAltGrIsDeadKey: false },
-  Slash:
+  Slash: 
    { value: '/',
      valueIsDeadKey: false,
      withShift: '?',
@@ -553,7 +472,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '¿',
      withShiftAltGrIsDeadKey: false },
-  CapsLock:
+  CapsLock: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -562,7 +481,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F1:
+  F1: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -571,7 +490,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F2:
+  F2: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -580,7 +499,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F3:
+  F3: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -589,7 +508,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F4:
+  F4: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -598,7 +517,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F5:
+  F5: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -607,7 +526,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F6:
+  F6: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -616,7 +535,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F7:
+  F7: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -625,7 +544,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F8:
+  F8: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -634,7 +553,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F9:
+  F9: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -643,7 +562,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F10:
+  F10: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -652,7 +571,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F11:
+  F11: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -661,7 +580,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F12:
+  F12: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -670,7 +589,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  PrintScreen:
+  Insert: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -679,7 +598,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  ScrollLock:
+  Home: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -688,7 +607,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Pause:
+  PageUp: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -697,7 +616,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Insert:
+  Delete: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -706,7 +625,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Home:
+  End: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -715,7 +634,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  PageUp:
+  PageDown: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -724,7 +643,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Delete:
+  ArrowRight: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -733,7 +652,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  End:
+  ArrowLeft: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -742,7 +661,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  PageDown:
+  ArrowDown: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -751,7 +670,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  ArrowRight:
+  ArrowUp: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -760,7 +679,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  ArrowLeft:
+  NumLock: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -769,34 +688,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  ArrowDown:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ArrowUp:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumLock:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadDivide:
+  NumpadDivide: 
    { value: '/',
      valueIsDeadKey: false,
      withShift: '/',
@@ -805,7 +697,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '/',
      withShiftAltGrIsDeadKey: false },
-  NumpadMultiply:
+  NumpadMultiply: 
    { value: '*',
      valueIsDeadKey: false,
      withShift: '*',
@@ -814,7 +706,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '*',
      withShiftAltGrIsDeadKey: false },
-  NumpadSubtract:
+  NumpadSubtract: 
    { value: '-',
      valueIsDeadKey: false,
      withShift: '-',
@@ -823,7 +715,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '-',
      withShiftAltGrIsDeadKey: false },
-  NumpadAdd:
+  NumpadAdd: 
    { value: '+',
      valueIsDeadKey: false,
      withShift: '+',
@@ -832,7 +724,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '+',
      withShiftAltGrIsDeadKey: false },
-  NumpadEnter:
+  NumpadEnter: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -841,7 +733,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Numpad1:
+  Numpad1: 
    { value: '1',
      valueIsDeadKey: false,
      withShift: '1',
@@ -850,7 +742,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '1',
      withShiftAltGrIsDeadKey: false },
-  Numpad2:
+  Numpad2: 
    { value: '2',
      valueIsDeadKey: false,
      withShift: '2',
@@ -859,7 +751,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '2',
      withShiftAltGrIsDeadKey: false },
-  Numpad3:
+  Numpad3: 
    { value: '3',
      valueIsDeadKey: false,
      withShift: '3',
@@ -868,7 +760,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '3',
      withShiftAltGrIsDeadKey: false },
-  Numpad4:
+  Numpad4: 
    { value: '4',
      valueIsDeadKey: false,
      withShift: '4',
@@ -877,7 +769,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '4',
      withShiftAltGrIsDeadKey: false },
-  Numpad5:
+  Numpad5: 
    { value: '5',
      valueIsDeadKey: false,
      withShift: '5',
@@ -886,7 +778,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '5',
      withShiftAltGrIsDeadKey: false },
-  Numpad6:
+  Numpad6: 
    { value: '6',
      valueIsDeadKey: false,
      withShift: '6',
@@ -895,7 +787,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '6',
      withShiftAltGrIsDeadKey: false },
-  Numpad7:
+  Numpad7: 
    { value: '7',
      valueIsDeadKey: false,
      withShift: '7',
@@ -904,7 +796,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '7',
      withShiftAltGrIsDeadKey: false },
-  Numpad8:
+  Numpad8: 
    { value: '8',
      valueIsDeadKey: false,
      withShift: '8',
@@ -913,7 +805,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '8',
      withShiftAltGrIsDeadKey: false },
-  Numpad9:
+  Numpad9: 
    { value: '9',
      valueIsDeadKey: false,
      withShift: '9',
@@ -922,7 +814,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '9',
      withShiftAltGrIsDeadKey: false },
-  Numpad0:
+  Numpad0: 
    { value: '0',
      valueIsDeadKey: false,
      withShift: '0',
@@ -931,7 +823,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '0',
      withShiftAltGrIsDeadKey: false },
-  NumpadDecimal:
+  NumpadDecimal: 
    { value: '.',
      valueIsDeadKey: false,
      withShift: '.',
@@ -940,7 +832,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '.',
      withShiftAltGrIsDeadKey: false },
-  IntlBackslash:
+  IntlBackslash: 
    { value: '§',
      valueIsDeadKey: false,
      withShift: '±',
@@ -949,7 +841,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '±',
      withShiftAltGrIsDeadKey: false },
-  ContextMenu:
+  ContextMenu: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -958,16 +850,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Power:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadEqual:
+  NumpadEqual: 
    { value: '=',
      valueIsDeadKey: false,
      withShift: '=',
@@ -976,7 +859,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '=',
      withShiftAltGrIsDeadKey: false },
-  F13:
+  F13: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -985,7 +868,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F14:
+  F14: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -994,7 +877,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F15:
+  F15: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1003,7 +886,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F16:
+  F16: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1012,7 +895,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F17:
+  F17: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1021,7 +904,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F18:
+  F18: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1030,7 +913,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F19:
+  F19: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1039,7 +922,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F20:
+  F20: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1048,7 +931,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F21:
+  AudioVolumeMute: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1057,124 +940,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  F22:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  F23:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  F24:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Open:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Help:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Select:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Again:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Undo:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Cut:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Copy:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Paste:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Find:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  AudioVolumeMute:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  AudioVolumeUp:
+  AudioVolumeUp: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '=',
@@ -1183,7 +949,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '=',
      withShiftAltGrIsDeadKey: false },
-  AudioVolumeDown:
+  AudioVolumeDown: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1192,7 +958,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  NumpadComma:
+  NumpadComma: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1201,7 +967,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  IntlRo:
+  IntlRo: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1210,7 +976,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  KanaMode:
+  KanaMode: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1219,7 +985,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  IntlYen:
+  IntlYen: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1228,7 +994,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Convert:
+  ControlLeft: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1237,7 +1003,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  NonConvert:
+  ShiftLeft: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1246,7 +1012,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Lang1:
+  AltLeft: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1255,7 +1021,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Lang2:
+  MetaLeft: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1264,7 +1030,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Lang3:
+  ControlRight: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1273,7 +1039,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Lang4:
+  ShiftRight: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1282,7 +1048,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Lang5:
+  AltRight: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
@@ -1291,430 +1057,7 @@ getKeyMap:  { Hyper:
      withAltGrIsDeadKey: false,
      withShiftAltGr: '',
      withShiftAltGrIsDeadKey: false },
-  Abort:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Props:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadParenLeft:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadParenRight:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadBackspace:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadMemoryStore:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadMemoryRecall:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadMemoryClear:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadMemoryAdd:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadMemorySubtract:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadClear:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  NumpadClearEntry:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ControlLeft:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ShiftLeft:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  AltLeft:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MetaLeft:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ControlRight:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ShiftRight:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  AltRight:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MetaRight:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrightnessUp:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrightnessDown:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaPlay:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaRecord:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaFastForward:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaRewind:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaTrackNext:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaTrackPrevious:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaStop:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  Eject:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaPlayPause:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MediaSelect:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  LaunchMail:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  LaunchApp2:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  LaunchApp1:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  SelectTask:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  LaunchScreenSaver:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserSearch:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserHome:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserBack:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserForward:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserStop:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserRefresh:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  BrowserFavorites:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  ZoomToggle:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MailReply:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MailForward:
-   { value: '',
-     valueIsDeadKey: false,
-     withShift: '',
-     withShiftIsDeadKey: false,
-     withAltGr: '',
-     withAltGrIsDeadKey: false,
-     withShiftAltGr: '',
-     withShiftAltGrIsDeadKey: false },
-  MailSend:
+  MetaRight: 
    { value: '',
      valueIsDeadKey: false,
      withShift: '',
