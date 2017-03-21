@@ -167,4 +167,44 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
   args.GetReturnValue().Set(result);
 }
 
+static v8::Persistent<v8::Function, v8::CopyablePersistentTraits<v8::Function>> _cb;
+
+uv_loop_t *loop = uv_default_loop();
+uv_async_t async;
+
+void notificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+  uv_async_send(&async);
+}
+
+static void asyncSendHandler(uv_async_t *handle) {
+  auto isolate = Isolate::GetCurrent();
+  v8::HandleScope scope(isolate);
+  auto context = isolate->GetCurrentContext();
+  auto global = context->Global();
+
+  const int argc = 0;
+  v8::Handle<v8::Value> argv[argc];
+
+  auto fn = Local<v8::Function>::New(isolate, _cb);
+  fn->Call(global, argc, argv);
+}
+
+void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+
+  uv_async_init(loop, &async, (uv_async_cb)asyncSendHandler);
+
+  auto isolate = Isolate::GetCurrent();
+  v8::Handle<v8::Function> arg0 = v8::Handle<v8::Function>::Cast(args[0]);
+  v8::Persistent<v8::Function> cb(isolate, arg0);
+  _cb = cb;
+
+  CFNotificationCenterRef center = CFNotificationCenterGetDistributedCenter();
+
+  // add an observer
+  CFNotificationCenterAddObserver(center, NULL, notificationCallback,
+    kTISNotifySelectedKeyboardInputSourceChanged, NULL,
+    CFNotificationSuspensionBehaviorDeliverImmediately
+  );
+}
+
 } // namespace vscode_keyboard

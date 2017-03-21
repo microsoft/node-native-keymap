@@ -32,6 +32,14 @@ NativeBinding.prototype.getCurrentKeyboardLayout = function() {
     return null;
   }
 };
+NativeBinding.prototype.onDidChangeKeyboardLayout = function(callback) {
+  try {
+    this._init();
+    this._keymapping.onDidChangeKeyboardLayout(callback);
+  } catch(err) {
+    console.error(err);
+  }
+}
 
 var binding = new NativeBinding();
 
@@ -41,3 +49,6 @@ exports.getCurrentKeyboardLayout = function() {
 exports.getKeyMap = function() {
   return binding.getKeyMap();
 };
+exports.onDidChangeKeyboardLayout = function(callback) {
+  return binding.onDidChangeKeyboardLayout(callback);
+}

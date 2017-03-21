@@ -21,6 +21,7 @@ using v8::Value;
 void init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "getKeyMap", _GetKeyMap);
   NODE_SET_METHOD(exports, "getCurrentKeyboardLayout", _GetCurrentKeyboardLayout);
+  NODE_SET_METHOD(exports, "onDidChangeKeyboardLayout", _OnDidChangeKeyboardLayout);
 }
 
 NODE_MODULE(addon, init)

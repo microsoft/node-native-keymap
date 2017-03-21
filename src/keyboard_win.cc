@@ -351,4 +351,8 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
   args.GetReturnValue().Set(result);
 }
 
+void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+
+}
+
 }  // namespace vscode_keyboard
