@@ -9,6 +9,7 @@
 
 #include "string_conversion.h"
 #include <windows.h>
+#include <Msctf.h>
 #include <ime.h>
 
 namespace {
@@ -351,7 +352,124 @@ namespace vscode_keyboard {
     args.GetReturnValue().Set(result);
   }
 
+  static v8::Persistent<v8::Function, v8::CopyablePersistentTraits<v8::Function>> _cb;
+
+  uv_loop_t *loop = uv_default_loop();
+  uv_async_t async;
+
+  class TfInputListener : public ITfInputProcessorProfileActivationSink {
+  private:
+    ULONG fRefCount;
+    ITfSource *pSource;
+    DWORD m_dwCookie;
+
+  public:
+    explicit TfInputListener() {
+      fRefCount = 1;
+      pSource = NULL;
+      m_dwCookie = TF_INVALID_COOKIE;
+    }
+
+    void StartListening() {
+      HRESULT hr;
+
+      ITfThreadMgr* pThreadMgr;
+      hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&pThreadMgr);
+      if (!SUCCEEDED(hr)) {
+        printf("native-keymap: Could not create ITfThreadMgr.\n");
+        return;
+      }
+
+      hr = pThreadMgr->QueryInterface(IID_ITfSource, (LPVOID*)&pSource);
+      if (!SUCCEEDED(hr)) {
+        printf("native-keymap: Could not obtain ITfSource.\n");
+        pThreadMgr->Release();
+        return;
+      }
+
+      hr = pSource->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
+        static_cast<ITfInputProcessorProfileActivationSink*>(this),
+        &m_dwCookie);
+
+      if (!SUCCEEDED(hr)) {
+        printf("native-keymap: Could not register ITfInputProcessorProfileActivationSink.\n");
+      }
+      pThreadMgr->Release();
+    }
+
+    void StopListening() {
+      if (pSource != NULL) {
+        if (m_dwCookie != TF_INVALID_COOKIE) {
+          pSource->UnadviseSink(m_dwCookie);
+          m_dwCookie = TF_INVALID_COOKIE;
+        }
+        pSource->Release();
+        pSource = NULL;
+      }
+    }
+
+    virtual ~TfInputListener() {
+      this->StopListening();
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnActivated(
+      /* [in] */ DWORD dwProfileType,
+      /* [in] */ LANGID langid,
+      /* [in] */ __RPC__in REFCLSID clsid,
+      /* [in] */ __RPC__in REFGUID catid,
+      /* [in] */ __RPC__in REFGUID guidProfile,
+      /* [in] */ HKL hkl,
+      /* [in] */ DWORD dwFlags) override {
+
+      uv_async_send(&async);
+
+      return S_OK;
+    }
+
+    // IUnknown methods
+    ULONG STDMETHODCALLTYPE AddRef() override {
+      return InterlockedIncrement(&fRefCount);
+    }
+
+    ULONG STDMETHODCALLTYPE Release() override {
+      ULONG newCount = InterlockedDecrement(&fRefCount);
+      if (0 == newCount) {
+        delete this;
+      }
+      return newCount;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override {
+      if (__uuidof(IUnknown) == riid || __uuidof(ITfInputProcessorProfileActivationSink) == riid) {
+        *ppvObject = this;
+        this->AddRef();
+        return S_OK;
+      }
+      *ppvObject = nullptr;
+      return E_FAIL;
+    }
+  };
+
+  static void asyncSendHandler(uv_async_t *handle) {
+    auto isolate = Isolate::GetCurrent();
+    v8::HandleScope scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto global = context->Global();
+
+    auto fn = Local<v8::Function>::New(isolate, _cb);
+    fn->Call(global, 0, NULL);
+  }
+
   void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
+    uv_async_init(loop, &async, (uv_async_cb)asyncSendHandler);
+
+    auto isolate = Isolate::GetCurrent();
+    v8::Handle<v8::Function> arg0 = v8::Handle<v8::Function>::Cast(args[0]);
+    v8::Persistent<v8::Function> cb(isolate, arg0);
+    _cb = cb;
+
+    auto listener1 = new TfInputListener();
+    listener1->StartListening();
   }
 }  // namespace vscode_keyboard
