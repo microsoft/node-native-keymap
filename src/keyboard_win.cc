@@ -266,7 +266,18 @@ namespace vscode_keyboard {
     return "VK_UNKNOWN";
   }
 
+  void _EnsureForegroundKBLayout() {
+    DWORD dwThreadId = 0;
+    HWND hWnd = GetForegroundWindow();
+    if (hWnd != NULL) {
+      dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
+    }
+    ActivateKeyboardLayout(GetKeyboardLayout(dwThreadId), 0);
+  }
+
   void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+    _EnsureForegroundKBLayout();
+
     Isolate* isolate = args.GetIsolate();
     Local<Object> result = Object::New(isolate);
     Local<String> _vkey = String::NewFromUtf8(isolate, "vkey");
@@ -332,6 +343,8 @@ namespace vscode_keyboard {
   }
 
   void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+    _EnsureForegroundKBLayout();
+
     Isolate* isolate = args.GetIsolate();
 
     char chr_layout_name[KL_NAMELENGTH];
