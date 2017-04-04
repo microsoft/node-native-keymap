@@ -106,9 +106,15 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFDataRef layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
   if (!layout_data) {
-    // https://developer.apple.com/library/mac/documentation/TextFonts/Reference/TextInputSourcesReference/#//apple_ref/c/func/TISGetInputSourceProperty
-    args.GetReturnValue().Set(result);
-    return;
+    // TISGetInputSourceProperty returns null with  Japanese keyboard layout.
+    // Using TISCopyCurrentKeyboardLayoutInputSource to fix NULL return.
+    source = TISCopyCurrentKeyboardLayoutInputSource();
+    layout_data = static_cast<CFDataRef>((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
+    if (!layout_data) {
+      // https://developer.apple.com/library/mac/documentation/TextFonts/Reference/TextInputSourcesReference/#//apple_ref/c/func/TISGetInputSourceProperty
+      args.GetReturnValue().Set(result);
+      return;
+    }
   }
 
   const UCKeyboardLayout* keyboardLayout = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layout_data));
