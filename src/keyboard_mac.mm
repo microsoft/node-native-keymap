@@ -213,4 +213,13 @@ void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args)
   );
 }
 
+void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  if (KBGetLayoutType(LMGetKbdType()) == kKeyboardISO) {
+    args.GetReturnValue().Set(Boolean::New(isolate, true));
+  } else {
+    args.GetReturnValue().Set(Boolean::New(isolate, false));
+  }
+}
+
 } // namespace vscode_keyboard

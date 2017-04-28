@@ -40,6 +40,14 @@ NativeBinding.prototype.onDidChangeKeyboardLayout = function(callback) {
     console.error(err);
   }
 }
+NativeBinding.prototype.isISOKeyboard = function(callback) {
+  try {
+    this._init();
+    return this._keymapping.isISOKeyboard();
+  } catch(err) {
+    return false;
+  }
+}
 
 var binding = new NativeBinding();
 
@@ -51,4 +59,7 @@ exports.getKeyMap = function() {
 };
 exports.onDidChangeKeyboardLayout = function(callback) {
   return binding.onDidChangeKeyboardLayout(callback);
-}
+};
+exports.isISOKeyboard = function(callback) {
+  return binding.isISOKeyboard(callback);
+};

@@ -233,7 +233,11 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
 }
 
 void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  
+
+}
+
+void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
+
 }
 
 } // namespace vscode_keyboard

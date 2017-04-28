@@ -22,6 +22,7 @@ void init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "getKeyMap", _GetKeyMap);
   NODE_SET_METHOD(exports, "getCurrentKeyboardLayout", _GetCurrentKeyboardLayout);
   NODE_SET_METHOD(exports, "onDidChangeKeyboardLayout", _OnDidChangeKeyboardLayout);
+  NODE_SET_METHOD(exports, "isISOKeyboard", _isISOKeyboard);
 }
 
 NODE_MODULE(addon, init)

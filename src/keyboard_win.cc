@@ -485,4 +485,9 @@ namespace vscode_keyboard {
     auto listener1 = new TfInputListener();
     listener1->StartListening();
   }
+
+  void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
+
+  }
+
 }  // namespace vscode_keyboard
