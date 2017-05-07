@@ -12,12 +12,12 @@
             "deps/chromium/x/keysym_to_unicode.cc",
             "src/keyboard_x.cc"
           ],
-          "link_settings": {
-            "libraries": [
-              "-lX11",
-              "-lxkbfile"
-            ]
-          }
+          "include_dirs": [
+            "<!@(pkg-config x11 xkbfile --cflags | sed s/-I//g)"
+          ],
+          "libraries": [
+            "<!@(pkg-config x11 xkbfile --libs)"
+          ]
         }],
         ['OS=="freebsd"', {
           "sources": [
