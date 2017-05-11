@@ -244,6 +244,8 @@ namespace vscode_keyboard {
     case VK_OEM_PERIOD: return "VK_OEM_PERIOD"; // For any country/region, the '.' key
     case VK_OEM_2: return "VK_OEM_2"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '/?' key
     case VK_OEM_3: return "VK_OEM_3"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '`~' key
+    case 0xC1: return "VK_ABNT_C1"; // Brazilian (ABNT) Keyboard
+    case 0xC2: return "VK_ABNT_C2"; // Brazilian (ABNT) Keyboard
     case VK_OEM_4: return "VK_OEM_4"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '[{' key
     case VK_OEM_5: return "VK_OEM_5"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the '\|' key
     case VK_OEM_6: return "VK_OEM_6"; // Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the ']}' key
