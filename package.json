@@ -1,6 +1,6 @@
 {
   "name": "native-keymap",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Get OS key mapping",
   "main": "index.js",
   "scripts": {
