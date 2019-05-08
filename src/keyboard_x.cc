@@ -4,6 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 #include "keymapping.h"
+
+#include "chromium/macros.h"
+#include "chromium/x/keysym_to_unicode.h"
 #include "string_conversion.h"
 
 #include <X11/XKBlib.h>
@@ -11,8 +14,11 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XKBrules.h>
 
-#include "../deps/chromium/macros.h"
-#include "../deps/chromium/x/keysym_to_unicode.h"
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
+#define USB_KEYMAP_DECLARATION const vscode_keyboard::KeycodeMapEntry usb_keycode_map[] =
+#include "chromium/keycode_converter_data.inc"
+#undef USB_KEYMAP
+#undef USB_KEYMAP_DECLARATION
 
 typedef struct _XDisplay XDisplay;
 
@@ -128,32 +134,12 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
-using v8::FunctionCallbackInfo;
-using v8::Isolate;
-using v8::Local;
-using v8::Object;
-using v8::String;
-using v8::Array;
-using v8::Value;
-using v8::Null;
-
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
-#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
-#include "../deps/chromium/keycode_converter_data.inc"
-#undef USB_KEYMAP
-#undef USB_KEYMAP_DECLARATION
-
-void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-  Local<Object> result = Object::New(isolate);
-  Local<String> _value = String::NewFromUtf8(isolate, "value");
-  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
-  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
-  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+NAN_METHOD(GetKeyMap) {
+  v8::Local<v8::Object> result = Nan::New<v8::Object>();
 
   Display *display;
   if (!(display = XOpenDisplay(""))) {
-    args.GetReturnValue().Set(result);
+    info.GetReturnValue().Set(result);
     return;
   }
 
@@ -176,40 +162,42 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
       continue;
     }
 
-    Local<Object> entry = Object::New(isolate);
+    v8::Local<v8::Object> entry = Nan::New<v8::Object>();
 
     key_event->keycode = native_keycode;
     key_event->state = 0;
     std::string value = GetStrFromXEvent(&event);
-    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+    Nan::Set(entry, Nan::New("value").ToLocalChecked(),
+        Nan::New<v8::String>(value.data(), value.length()).ToLocalChecked());
 
     key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
     std::string withShift = GetStrFromXEvent(&event);
-    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+    Nan::Set(entry, Nan::New("withShift").ToLocalChecked(),
+        Nan::New<v8::String>(withShift.data(), withShift.length()).ToLocalChecked());
 
     key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
     std::string withAltGr = GetStrFromXEvent(&event);
-    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+    Nan::Set(entry, Nan::New("withAltGr").ToLocalChecked(),
+        Nan::New<v8::String>(withAltGr.data(), withAltGr.length()).ToLocalChecked());
 
     key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
     std::string withShiftAltGr = GetStrFromXEvent(&event);
-    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+    Nan::Set(entry, Nan::New("withShiftAltGr").ToLocalChecked(),
+        Nan::New<v8::String>(withShiftAltGr.data(), withShiftAltGr.length()).ToLocalChecked());
 
-    result->Set(String::NewFromUtf8(isolate, code), entry);
+    Nan::Set(result, Nan::New(code).ToLocalChecked(), entry);
   }
 
   XFlush(display);
   XCloseDisplay(display);
 
-  args.GetReturnValue().Set(result);
+  info.GetReturnValue().Set(result);
 }
 
-void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-
+NAN_METHOD(GetCurrentKeyboardLayout) {
   Display *display;
   if (!(display = XOpenDisplay(""))) {
-    args.GetReturnValue().Set(Null(isolate));
+    info.GetReturnValue().SetNull();
     return;
   }
 
@@ -217,27 +205,23 @@ void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) 
   char *tmp = NULL;
   int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
   if (res) {
-    Local<Object> result = Object::New(isolate);
-    result->Set(String::NewFromUtf8(isolate, "model"), String::NewFromUtf8(isolate, vdr.model ? vdr.model : ""));
-    result->Set(String::NewFromUtf8(isolate, "layout"), String::NewFromUtf8(isolate, vdr.layout ? vdr.layout : ""));
-    result->Set(String::NewFromUtf8(isolate, "variant"), String::NewFromUtf8(isolate, vdr.variant ? vdr.variant : ""));
-    result->Set(String::NewFromUtf8(isolate, "options"), String::NewFromUtf8(isolate, vdr.options ? vdr.options : ""));
-    result->Set(String::NewFromUtf8(isolate, "rules"), String::NewFromUtf8(isolate, tmp ? tmp : ""));
-    args.GetReturnValue().Set(result);
+    v8::Local<v8::Object> result = Nan::New<v8::Object>();
+    Nan::Set(result, Nan::New("model").ToLocalChecked(), Nan::New(vdr.model).ToLocalChecked());
+    Nan::Set(result, Nan::New("layout").ToLocalChecked(), Nan::New(vdr.layout).ToLocalChecked());
+    Nan::Set(result, Nan::New("variant").ToLocalChecked(), Nan::New(vdr.variant).ToLocalChecked());
+    Nan::Set(result, Nan::New("options").ToLocalChecked(), Nan::New(vdr.options).ToLocalChecked());
+    Nan::Set(result, Nan::New("rules").ToLocalChecked(), Nan::New(tmp).ToLocalChecked());
+    info.GetReturnValue().Set(result);
   } else {
-    args.GetReturnValue().Set(Null(isolate));
+    info.GetReturnValue().SetNull();
   }
 
   XFlush(display);
   XCloseDisplay(display);
 }
 
-void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+NAN_METHOD(OnDidChangeKeyboardLayout) {}
 
-}
-
-void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
-
-}
+NAN_METHOD(IsISOKeyboard) {}
 
 } // namespace vscode_keyboard

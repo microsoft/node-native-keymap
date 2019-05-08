@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Microsoft/node-native-keymap/issues"
   },
-  "homepage": "https://github.com/Microsoft/node-native-keymap#readme"
+  "homepage": "https://github.com/Microsoft/node-native-keymap#readme",
+  "dependencies": {
+    "nan": "^2.14.0"
+  }
 }

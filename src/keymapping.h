@@ -6,11 +6,9 @@
 #ifndef KEYMAPPING_H_
 #define KEYMAPPING_H_
 
-#include <node.h>
-#include <uv.h>
-#include <string>
-#include <vector>
-#include "../deps/chromium/keyboard_codes.h"
+#include <nan.h>
+
+#include "chromium/keyboard_codes.h"
 
 namespace vscode_keyboard {
 
@@ -33,10 +31,10 @@ typedef struct {
   const char* code;
 } KeycodeMapEntry;
 
-void _GetKeyMap(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args);
+NAN_METHOD(GetKeyMap);
+NAN_METHOD(GetCurrentKeyboardLayout);
+NAN_METHOD(OnDidChangeKeyboardLayout);
+NAN_METHOD(IsISOKeyboard);
 
 }  // namespace vscode_keyboard
 

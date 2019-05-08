@@ -3,28 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-#include <node.h>
-#include <map>
-
 #include "keymapping.h"
 
 namespace vscode_keyboard {
 
-using v8::FunctionCallbackInfo;
-using v8::Isolate;
-using v8::Local;
-using v8::Object;
-using v8::String;
-using v8::Array;
-using v8::Value;
-
-void init(Local<Object> exports) {
-  NODE_SET_METHOD(exports, "getKeyMap", _GetKeyMap);
-  NODE_SET_METHOD(exports, "getCurrentKeyboardLayout", _GetCurrentKeyboardLayout);
-  NODE_SET_METHOD(exports, "onDidChangeKeyboardLayout", _OnDidChangeKeyboardLayout);
-  NODE_SET_METHOD(exports, "isISOKeyboard", _isISOKeyboard);
+NAN_MODULE_INIT(Init) {
+  Nan::SetMethod(target, "getKeyMap", GetKeyMap);
+  Nan::SetMethod(target, "getCurrentKeyboardLayout", GetCurrentKeyboardLayout);
+  Nan::SetMethod(target, "onDidChangeKeyboardLayout", OnDidChangeKeyboardLayout);
+  Nan::SetMethod(target, "isISOKeyboard", IsISOKeyboard);
 }
 
-NODE_MODULE(addon, init)
+NODE_MODULE(addon, Init)
 
 } // namespace vscode_keyboard

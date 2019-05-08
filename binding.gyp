@@ -6,6 +6,10 @@
         "src/string_conversion.cc",
         "src/keymapping.cc"
       ],
+      "include_dirs": [
+        "deps",
+        "<!(node -e \"require('nan')\")"
+      ],
       "conditions": [
         ['OS=="linux"', {
           "sources": [
@@ -46,7 +50,7 @@
           ],
           'link_settings' : {
             'libraries' : [
-              '-framework Cocoa'
+              '$(SDKROOT)/System/Library/Frameworks/Cocoa.framework'
             ]
           }
         }]
