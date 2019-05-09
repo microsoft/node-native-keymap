@@ -1,4 +1,4 @@
-# OS key mapping node module [![Build Status](https://travis-ci.org/Microsoft/node-native-keymap.svg?branch=master)](https://travis-ci.org/Microsoft/node-native-keymap)
+# OS key mapping node module [![Build Status](https://dev.azure.com/ms/node-native-keymap/_apis/build/status/microsoft.node-native-keymap?branchName=master)](https://dev.azure.com/ms/node-native-keymap/_build/latest?definitionId=138&branchName=master)
 Returns what characters are produced by pressing keys with different modifiers on the current system keyboard layout.
 
 ## Installing
