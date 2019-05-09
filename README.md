@@ -64,8 +64,10 @@ Example output when using German (Swiss) keyboard layout (on Windows):
  * mac
  * freebsd
 
+## Known issues
+ * only tested from the Electron Main process
+
 ## Developing
- * only tested on `node v6.x`
  * `npm install -g node-gyp`
  * `node-gyp configure` (for debugging use `node-gyp configure -d`)
  * `node-gyp build`
