@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *  Licensed under the MIT License. See License.txt in the project root for
+ *  license information.
  *--------------------------------------------------------------------------------------------*/
 
 #include "keymapping.h"
@@ -14,8 +15,10 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XKBrules.h>
 
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
-#define USB_KEYMAP_DECLARATION const vscode_keyboard::KeycodeMapEntry usb_keycode_map[] =
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) \
+  { usb, xkb, code }
+#define USB_KEYMAP_DECLARATION \
+  const vscode_keyboard::KeycodeMapEntry usb_keycode_map[] =
 #include "chromium/keycode_converter_data.inc"
 #undef USB_KEYMAP
 #undef USB_KEYMAP_DECLARATION
@@ -63,7 +66,8 @@ class KeyModifierMaskToXModifierMask {
         if (keysym == XK_Mode_switch) {
           mode_switch_modifier = 1 << mod_index;
         }
-        if (keysym == XK_Meta_L || keysym == XK_Super_L || keysym == XK_Meta_R || keysym == XK_Super_R) {
+        if (keysym == XK_Meta_L || keysym == XK_Super_L ||
+            keysym == XK_Meta_R || keysym == XK_Super_R) {
           meta_modifier = 1 << mod_index;
         }
         if (keysym == XK_Num_Lock) {
@@ -80,7 +84,7 @@ class KeyModifierMaskToXModifierMask {
 
     // Ctrl + Alt => AltGr
     if (keyMod & kControlKeyModifierMask && keyMod & kAltKeyModifierMask) {
-      x_modifier |= mode_switch_modifier;//alt_r_modifier;
+      x_modifier |= mode_switch_modifier;  // alt_r_modifier;
     } else if (keyMod & kControlKeyModifierMask) {
       x_modifier |= ControlMask;
     } else if (keyMod & kAltKeyModifierMask) {
@@ -103,9 +107,7 @@ class KeyModifierMaskToXModifierMask {
   }
 
  private:
-  KeyModifierMaskToXModifierMask() {
-    Initialize(NULL);
-  }
+  KeyModifierMaskToXModifierMask() { Initialize(NULL); }
 
   int alt_modifier;
   int meta_modifier;
@@ -121,23 +123,21 @@ std::string GetStrFromXEvent(const XEvent* xev) {
   XLookupString(const_cast<XKeyEvent*>(xkey), NULL, 0, &keysym, NULL);
   uint16_t character = ui::GetUnicodeCharacterFromXKeySym(keysym);
 
-  if (!character)
-    return std::string();
+  if (!character) return std::string();
 
   wchar_t value = character;
 
   return vscode_keyboard::UTF16toUTF8(&value, 1);
 }
 
-} // namespace
-
+}  // namespace
 
 namespace vscode_keyboard {
 
 NAN_METHOD(GetKeyMap) {
   v8::Local<v8::Object> result = Nan::New<v8::Object>();
 
-  Display *display;
+  Display* display;
   if (!(display = XOpenDisplay(""))) {
     info.GetReturnValue().Set(result);
     return;
@@ -149,13 +149,14 @@ NAN_METHOD(GetKeyMap) {
   key_event->display = display;
   key_event->type = KeyPress;
 
-  KeyModifierMaskToXModifierMask *mask_provider = &KeyModifierMaskToXModifierMask::GetInstance();
+  KeyModifierMaskToXModifierMask* mask_provider =
+      &KeyModifierMaskToXModifierMask::GetInstance();
   mask_provider->Initialize(display);
 
   size_t cnt = sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]);
 
   for (size_t i = 0; i < cnt; ++i) {
-    const char *code = usb_keycode_map[i].code;
+    const char* code = usb_keycode_map[i].code;
     int native_keycode = usb_keycode_map[i].native_keycode;
 
     if (!code || native_keycode <= 0) {
@@ -167,23 +168,30 @@ NAN_METHOD(GetKeyMap) {
     key_event->keycode = native_keycode;
     key_event->state = 0;
     std::string value = GetStrFromXEvent(&event);
-    Nan::Set(entry, Nan::New("value").ToLocalChecked(),
+    Nan::Set(
+        entry, Nan::New("value").ToLocalChecked(),
         Nan::New<v8::String>(value.data(), value.length()).ToLocalChecked());
 
     key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
     std::string withShift = GetStrFromXEvent(&event);
     Nan::Set(entry, Nan::New("withShift").ToLocalChecked(),
-        Nan::New<v8::String>(withShift.data(), withShift.length()).ToLocalChecked());
+             Nan::New<v8::String>(withShift.data(), withShift.length())
+                 .ToLocalChecked());
 
-    key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
+    key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask |
+                                                     kAltKeyModifierMask);
     std::string withAltGr = GetStrFromXEvent(&event);
     Nan::Set(entry, Nan::New("withAltGr").ToLocalChecked(),
-        Nan::New<v8::String>(withAltGr.data(), withAltGr.length()).ToLocalChecked());
+             Nan::New<v8::String>(withAltGr.data(), withAltGr.length())
+                 .ToLocalChecked());
 
-    key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
+    key_event->state = mask_provider->XModFromKeyMod(
+        kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
     std::string withShiftAltGr = GetStrFromXEvent(&event);
-    Nan::Set(entry, Nan::New("withShiftAltGr").ToLocalChecked(),
-        Nan::New<v8::String>(withShiftAltGr.data(), withShiftAltGr.length()).ToLocalChecked());
+    Nan::Set(
+        entry, Nan::New("withShiftAltGr").ToLocalChecked(),
+        Nan::New<v8::String>(withShiftAltGr.data(), withShiftAltGr.length())
+            .ToLocalChecked());
 
     Nan::Set(result, Nan::New(code).ToLocalChecked(), entry);
   }
@@ -195,22 +203,27 @@ NAN_METHOD(GetKeyMap) {
 }
 
 NAN_METHOD(GetCurrentKeyboardLayout) {
-  Display *display;
+  Display* display;
   if (!(display = XOpenDisplay(""))) {
     info.GetReturnValue().SetNull();
     return;
   }
 
   XkbRF_VarDefsRec vdr;
-  char *tmp = NULL;
+  char* tmp = NULL;
   int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
   if (res) {
     v8::Local<v8::Object> result = Nan::New<v8::Object>();
-    Nan::Set(result, Nan::New("model").ToLocalChecked(), Nan::New(vdr.model).ToLocalChecked());
-    Nan::Set(result, Nan::New("layout").ToLocalChecked(), Nan::New(vdr.layout).ToLocalChecked());
-    Nan::Set(result, Nan::New("variant").ToLocalChecked(), Nan::New(vdr.variant).ToLocalChecked());
-    Nan::Set(result, Nan::New("options").ToLocalChecked(), Nan::New(vdr.options).ToLocalChecked());
-    Nan::Set(result, Nan::New("rules").ToLocalChecked(), Nan::New(tmp).ToLocalChecked());
+    Nan::Set(result, Nan::New("model").ToLocalChecked(),
+             Nan::New(vdr.model).ToLocalChecked());
+    Nan::Set(result, Nan::New("layout").ToLocalChecked(),
+             Nan::New(vdr.layout).ToLocalChecked());
+    Nan::Set(result, Nan::New("variant").ToLocalChecked(),
+             Nan::New(vdr.variant).ToLocalChecked());
+    Nan::Set(result, Nan::New("options").ToLocalChecked(),
+             Nan::New(vdr.options).ToLocalChecked());
+    Nan::Set(result, Nan::New("rules").ToLocalChecked(),
+             Nan::New(tmp).ToLocalChecked());
     info.GetReturnValue().Set(result);
   } else {
     info.GetReturnValue().SetNull();
@@ -224,4 +237,4 @@ NAN_METHOD(OnDidChangeKeyboardLayout) {}
 
 NAN_METHOD(IsISOKeyboard) {}
 
-} // namespace vscode_keyboard
+}  // namespace vscode_keyboard

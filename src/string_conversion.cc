@@ -1,6 +1,7 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *  Licensed under the MIT License. See License.txt in the project root for
+ *  license information.
  *--------------------------------------------------------------------------------------------*/
 
 #include "string_conversion.h"
@@ -9,7 +10,7 @@ namespace vscode_keyboard {
 
 wchar_t conversion_buffer[10];
 
-std::string UTF16toUTF8(const wchar_t * in, int length) {
+std::string UTF16toUTF8(const wchar_t *in, int length) {
   if (length < 10) {
     for (int i = 0; i < length; ++i) {
       conversion_buffer[i] = in[i];
@@ -24,16 +25,16 @@ std::string UTF16toUTF8(const wchar_t * in, int length) {
   }
   t[length] = 0;
   std::string result = UTF16to8(t);
-  delete []t;
+  delete[] t;
 
   return result;
 }
 
 // http://stackoverflow.com/a/148766
-std::string UTF16to8(const wchar_t * in) {
+std::string UTF16to8(const wchar_t *in) {
   std::string out;
   unsigned int codepoint = 0;
-  for (;  *in != 0;  ++in) {
+  for (; *in != 0; ++in) {
     if (*in >= 0xd800 && *in <= 0xdbff) {
       codepoint = ((*in - 0xd800) << 10) + 0x10000;
     } else {
