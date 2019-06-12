@@ -46,6 +46,8 @@
         }],
         ['OS=="mac"', {
           "sources": [
+            "deps/chromium/sys_string_conversions.mm",
+            "deps/chromium/sys_string_conversions.h",
             "src/keyboard_mac.mm"
           ],
           'link_settings' : {

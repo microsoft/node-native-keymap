@@ -6,6 +6,7 @@
 #include "keymapping.h"
 
 #include "chromium/macros.h"
+#include "chromium/sys_string_conversions.h"
 #include "string_conversion.h"
 
 #include <Carbon/Carbon.h>
@@ -147,10 +148,10 @@ NAN_METHOD(GetCurrentKeyboardLayout) {
   v8::Local<v8::Object> result = Nan::New<v8::Object>();
 
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
-  CFStringRef sourceId = (CFStringRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
-  if (sourceId) {
-    // result->Set(Nan::GetCurrentContext(), Nan::New("id").ToLocalChecked(), );
-  }
+  std::string source_id = CFStringToSTLStringWithEncoding(
+      reinterpret_cast<CFStringRef>(TISGetInputSourceProperty(source, kTISPropertyInputSourceID)));
+  Nan::Set(result, Nan::New("id").ToLocalChecked(),
+           Nan::New<v8::String>(source_id.data(), source_id.length()).ToLocalChecked());
 
   TISInputSourceRef nameSource = TISCopyCurrentKeyboardInputSource();
   CFStringRef localizedName = (CFStringRef) TISGetInputSourceProperty(nameSource, kTISPropertyLocalizedName);
@@ -162,7 +163,9 @@ NAN_METHOD(GetCurrentKeyboardLayout) {
   if (languages && [languages count] > 0) {
     NSString* lang = [languages objectAtIndex:0];
     if (lang) {
-      // result->Set(Nan::GetCurrentContext(), Nan::New("lang").ToLocalChecked(), );
+      std::string lang_str = CFStringToSTLStringWithEncoding(reinterpret_cast<CFStringRef>(lang));
+      Nan::Set(result, Nan::New("lang").ToLocalChecked(),
+               Nan::New<v8::String>(lang_str.data(), lang_str.length()).ToLocalChecked());
     }
   }
 
