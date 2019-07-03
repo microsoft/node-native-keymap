@@ -146,20 +146,20 @@ NAN_METHOD(GetKeyMap) {
 
 NAN_METHOD(GetCurrentKeyboardLayout) {
   v8::Local<v8::Object> result = Nan::New<v8::Object>();
-
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
+
   std::string source_id = CFStringToSTLStringWithEncoding(
       reinterpret_cast<CFStringRef>(TISGetInputSourceProperty(source, kTISPropertyInputSourceID)));
   Nan::Set(result, Nan::New("id").ToLocalChecked(),
            Nan::New<v8::String>(source_id.data(), source_id.length()).ToLocalChecked());
 
-  TISInputSourceRef nameSource = TISCopyCurrentKeyboardInputSource();
-  CFStringRef localizedName = (CFStringRef) TISGetInputSourceProperty(nameSource, kTISPropertyLocalizedName);
-  if(localizedName) {
-    result->Set(String::NewFromUtf8(isolate, "localizedName"), String::NewFromUtf8(isolate, std::string([(NSString *)localizedName UTF8String]).c_str()));
-  }
+  std::string localized_name = CFStringToSTLStringWithEncoding(reinterpret_cast<CFStringRef>(
+      TISGetInputSourceProperty(source, kTISPropertyLocalizedName)));
+  Nan::Set(result, Nan::New("localizedName").ToLocalChecked(),
+           Nan::New<v8::String>(localized_name.data(), localized_name.length()).ToLocalChecked());
 
-  NSArray* languages = (NSArray *) TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
+  NSArray* languages =
+      (NSArray*)TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
   if (languages && [languages count] > 0) {
     NSString* lang = [languages objectAtIndex:0];
     if (lang) {
