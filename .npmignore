@@ -1,7 +1,8 @@
-/.vscode
-/build
-/test
-.gitignore
-.npmignore
-.travis.yml
-npm-debug.log
+/.vscode/
+/build/
+/test/
+/.gitignore
+/.npmignore
+/azure-pipelines.yml
+/build-template.yml
+/npm-debug.log
