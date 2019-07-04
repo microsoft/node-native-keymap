@@ -13,7 +13,6 @@
 #include <ime.h>
 #include <windows.h>
 
-
 #define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) \
   { usb, win, code }
 #define USB_KEYMAP_DECLARATION \
@@ -600,12 +599,12 @@ typedef struct {
 NAN_METHOD(GetKeyMap) {
   EnsureForegroundKBLayout();
   v8::Local<v8::Object> result = Nan::New<v8::Object>();
-  Local<String> _vkey = String::NewFromUtf8(isolate, "vkey");
-  Local<String> _value = String::NewFromUtf8(isolate, "value");
-  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
-  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
-  Local<String> _withShiftAltGr =
-      String::NewFromUtf8(isolate, "withShiftAltGr");
+  v8::Local<v8::String> _vkey = Nan::New("vkey").ToLocalChecked();
+  v8::Local<v8::String> _value = Nan::New("value").ToLocalChecked();
+  v8::Local<v8::String> _withShift = Nan::New("withShift").ToLocalChecked();
+  v8::Local<v8::String> _withAltGr = Nan::New("withAltGr").ToLocalChecked();
+  v8::Local<v8::String> _withShiftAltGr =
+      Nan::New("withShiftAltGr").ToLocalChecked();
 
   UINT clear_key_code = VK_DECIMAL;
   UINT clear_scan_code = ::MapVirtualKeyW(clear_key_code, MAPVK_VK_TO_VSC);
@@ -623,9 +622,9 @@ NAN_METHOD(GetKeyMap) {
     int native_keycode = ::MapVirtualKeyW(native_scancode, MAPVK_VSC_TO_VK);
     v8::Local<v8::Object> entry = Nan::New<v8::Object>();
 
-    auto vkey = VKeyToStr(native_keycode);
+    const char* vkey = VKeyToStr(native_keycode);
     Nan::Set(entry, Nan::New("vkey").ToLocalChecked(),
-             Nan::New<v8::String>(vkey.data(), vkey.length()).ToLocalChecked());
+             Nan::New<v8::String>(vkey).ToLocalChecked());
 
     std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state,
                                            clear_key_code, clear_scan_code);
@@ -684,9 +683,9 @@ NAN_METHOD(GetCurrentKeyboardLayout) {
   Nan::Set(result, Nan::New("name").ToLocalChecked(),
            Nan::New<v8::String>(layout_name.data(), layout_name.length())
                .ToLocalChecked());
-  Nan::Set(result, Nan::New("id").ToLocalChecked()),
-      Nan::New<v8::String>(layout_id.data(), layout_id.length())
-          .ToLocalChecked();
+  Nan::Set(result, Nan::New("id").ToLocalChecked(),
+           Nan::New<v8::String>(layout_id.data(), layout_id.length())
+               .ToLocalChecked());
   Nan::Set(result, Nan::New("text").ToLocalChecked(),
            Nan::New<v8::String>(layout_text.data(), layout_text.length())
                .ToLocalChecked());
