@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 #include "keymapping.h"
+#include "common.h"
 
 #include "../deps/chromium/macros.h"
 
@@ -64,15 +65,6 @@ namespace {
 } // namespace
 
 namespace vscode_keyboard {
-
-  using v8::FunctionCallbackInfo;
-  using v8::Isolate;
-  using v8::Local;
-  using v8::Object;
-  using v8::String;
-  using v8::Array;
-  using v8::Value;
-  using v8::Null;
 
 #define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, win, code}
 #define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
@@ -277,16 +269,11 @@ namespace vscode_keyboard {
     ActivateKeyboardLayout(GetKeyboardLayout(dwThreadId), 0);
   }
 
-  void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
+  napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
     _EnsureForegroundKBLayout();
 
-    Isolate* isolate = args.GetIsolate();
-    Local<Object> result = Object::New(isolate);
-    Local<String> _vkey = String::NewFromUtf8(isolate, "vkey");
-    Local<String> _value = String::NewFromUtf8(isolate, "value");
-    Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
-    Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
-    Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+    napi_value result;
+    NAPI_CALL(env, napi_create_object(env, &result));
 
     UINT clear_key_code = VK_DECIMAL;
     UINT clear_scan_code = ::MapVirtualKeyW(clear_key_code, MAPVK_VK_TO_VSC);
@@ -303,25 +290,26 @@ namespace vscode_keyboard {
 
       int native_keycode = ::MapVirtualKeyW(native_scancode, MAPVK_VSC_TO_VK);
 
-      Local<Object> entry = Object::New(isolate);
+      napi_value entry;
+      NAPI_CALL(env, napi_create_object(env, &entry));
 
-      entry->Set(_vkey, String::NewFromUtf8(isolate, _VKeyToStr(native_keycode)));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "vkey", _VKeyToStr(native_keycode)));
 
       std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state, clear_key_code, clear_scan_code);
-      entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.c_str()));
 
       std::string withShift = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-      entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
 
       std::string withAltGr = GetStrFromKeyPress(native_keycode, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-      entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
 
       std::string withShiftAltGr = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-      entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
 
-      result->Set(String::NewFromUtf8(isolate, code), entry);
+      NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
     }
-    args.GetReturnValue().Set(result);
+    return result;
   }
 
   std::string GetStringRegKey(std::string path, std::string name) {
@@ -344,15 +332,12 @@ namespace vscode_keyboard {
     return result;
   }
 
-  void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
     _EnsureForegroundKBLayout();
-
-    Isolate* isolate = args.GetIsolate();
 
     char chr_layout_name[KL_NAMELENGTH];
     if (!GetKeyboardLayoutName(chr_layout_name)) {
-      args.GetReturnValue().Set(Null(isolate));
-      return;
+      return napi_fetch_null(env);
     }
     std::string layout_name = chr_layout_name;
 
@@ -360,26 +345,30 @@ namespace vscode_keyboard {
     std::string layout_id = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Id");
     std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
 
-    Local<Object> result = Object::New(isolate);
-    result->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, layout_name.c_str()));
-    result->Set(String::NewFromUtf8(isolate, "id"), String::NewFromUtf8(isolate, layout_id.c_str()));
-    result->Set(String::NewFromUtf8(isolate, "text"), String::NewFromUtf8(isolate, layout_text.c_str()));
-    args.GetReturnValue().Set(result);
+    napi_value result;
+    NAPI_CALL(env, napi_create_object(env, &result));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "name", layout_name.c_str()));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "id", layout_id.c_str()));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "text", layout_text.c_str()));
+    return result;
   }
 
-  static v8::Persistent<v8::Function, v8::CopyablePersistentTraits<v8::Function>> _cb;
-
-  uv_loop_t *loop = uv_default_loop();
-  uv_async_t async;
+  typedef struct {
+    napi_env env;
+    napi_async_context context;
+    napi_ref funcRef;
+  } NotificationCallbackData;
 
   class TfInputListener : public ITfInputProcessorProfileActivationSink {
   private:
+    NotificationCallbackData *data;
     ULONG fRefCount;
     ITfSource *pSource;
     DWORD m_dwCookie;
 
   public:
-    explicit TfInputListener() {
+    explicit TfInputListener(NotificationCallbackData *data) {
+      this->data = data;
       fRefCount = 1;
       pSource = NULL;
       m_dwCookie = TF_INVALID_COOKIE;
@@ -425,6 +414,7 @@ namespace vscode_keyboard {
 
     virtual ~TfInputListener() {
       this->StopListening();
+      delete this->data;
     }
 
     virtual HRESULT STDMETHODCALLTYPE OnActivated(
@@ -436,7 +426,18 @@ namespace vscode_keyboard {
       /* [in] */ HKL hkl,
       /* [in] */ DWORD dwFlags) override {
 
-      uv_async_send(&async);
+      napi_env env = data->env;
+      napi_async_context context = data->context;
+      napi_ref funcRef = data->funcRef;
+
+      napi_value global;
+      NAPI_CALL_BASE(env, napi_get_global(env, &global), S_OK);
+
+      napi_value func;
+      NAPI_CALL_BASE(env, napi_get_reference_value(env, funcRef, &func), S_OK);
+
+      std::vector<napi_value> argv;
+      NAPI_CALL_BASE(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL), S_OK);
 
       return S_OK;
     }
@@ -465,31 +466,40 @@ namespace vscode_keyboard {
     }
   };
 
-  static void asyncSendHandler(uv_async_t *handle) {
-    auto isolate = Isolate::GetCurrent();
-    v8::HandleScope scope(isolate);
-    auto context = isolate->GetCurrentContext();
-    auto global = context->Global();
+  napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
-    auto fn = Local<v8::Function>::New(isolate, _cb);
-    fn->Call(global, 0, NULL);
-  }
+    NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
 
-  void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
+    napi_valuetype valuetype0;
+    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
+    NAPI_ASSERT(env, valuetype0 == napi_function, "Wrong type of arguments. Expects a function as first argument.");
 
-    uv_async_init(loop, &async, (uv_async_cb)asyncSendHandler);
+    napi_value func = args[0];
+    napi_ref funcRef;
+    NAPI_CALL(env, napi_create_reference(env, func, 1, &funcRef));
 
-    auto isolate = Isolate::GetCurrent();
-    v8::Handle<v8::Function> arg0 = v8::Handle<v8::Function>::Cast(args[0]);
-    v8::Persistent<v8::Function> cb(isolate, arg0);
-    _cb = cb;
+    napi_value resource_name;
+    NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
 
-    auto listener1 = new TfInputListener();
+    napi_async_context context;
+    NAPI_CALL(env, napi_async_init(env, func, resource_name, &context));
+
+    NotificationCallbackData *data = new NotificationCallbackData();
+    data->env = env;
+    data->context = context;
+    data->funcRef = funcRef;
+
+    auto listener1 = new TfInputListener(data);
     listener1->StartListening();
+
+    return napi_fetch_undefined(env);
   }
 
-  void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
-
+  napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
+    return napi_fetch_undefined(env);
   }
 
 }  // namespace vscode_keyboard

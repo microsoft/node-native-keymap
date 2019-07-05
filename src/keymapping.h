@@ -6,11 +6,13 @@
 #ifndef KEYMAPPING_H_
 #define KEYMAPPING_H_
 
-#include <node.h>
-#include <uv.h>
+#include <node_api.h>
+
 #include <string>
 #include <vector>
 #include "../deps/chromium/keyboard_codes.h"
+
+#define CHECK_OK(x) if (x != napi_ok) return NULL
 
 namespace vscode_keyboard {
 
@@ -33,10 +35,15 @@ typedef struct {
   const char* code;
 } KeycodeMapEntry;
 
-void _GetKeyMap(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args);
-void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args);
+napi_value _GetKeyMap(napi_env env, napi_callback_info info);
+napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info);
+napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info);
+napi_value _isISOKeyboard(napi_env env, napi_callback_info info);
+
+napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8Name, const char *value);
+napi_value napi_fetch_null(napi_env env);
+napi_value napi_fetch_undefined(napi_env env);
+napi_value napi_fetch_boolean(napi_env env, bool value);
 
 }  // namespace vscode_keyboard
 

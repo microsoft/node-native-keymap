@@ -5,6 +5,7 @@
 
 #include "keymapping.h"
 #include "string_conversion.h"
+#include "common.h"
 
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
@@ -128,33 +129,20 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
-using v8::FunctionCallbackInfo;
-using v8::Isolate;
-using v8::Local;
-using v8::Object;
-using v8::String;
-using v8::Array;
-using v8::Value;
-using v8::Null;
-
 #define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
 #define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
 #include "../deps/chromium/keycode_converter_data.inc"
 #undef USB_KEYMAP
 #undef USB_KEYMAP_DECLARATION
 
-void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-  Local<Object> result = Object::New(isolate);
-  Local<String> _value = String::NewFromUtf8(isolate, "value");
-  Local<String> _withShift = String::NewFromUtf8(isolate, "withShift");
-  Local<String> _withAltGr = String::NewFromUtf8(isolate, "withAltGr");
-  Local<String> _withShiftAltGr = String::NewFromUtf8(isolate, "withShiftAltGr");
+napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
+
+  napi_value result;
+  NAPI_CALL(env, napi_create_object(env, &result));
 
   Display *display;
   if (!(display = XOpenDisplay(""))) {
-    args.GetReturnValue().Set(result);
-    return;
+    return result;
   }
 
   XEvent event;
@@ -176,68 +164,77 @@ void _GetKeyMap(const FunctionCallbackInfo<Value>& args) {
       continue;
     }
 
-    Local<Object> entry = Object::New(isolate);
+    napi_value entry;
+    NAPI_CALL(env, napi_create_object(env, &entry));
 
     key_event->keycode = native_keycode;
-    key_event->state = 0;
-    std::string value = GetStrFromXEvent(&event);
-    entry->Set(_value, String::NewFromUtf8(isolate, value.c_str()));
+    {
+      key_event->state = 0;
+      std::string value = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.c_str()));
+    }
 
-    key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
-    std::string withShift = GetStrFromXEvent(&event);
-    entry->Set(_withShift, String::NewFromUtf8(isolate, withShift.c_str()));
+    {
+      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
+      std::string withShift = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
+    }
 
-    key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
-    std::string withAltGr = GetStrFromXEvent(&event);
-    entry->Set(_withAltGr, String::NewFromUtf8(isolate, withAltGr.c_str()));
+    {
+      key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
+      std::string withAltGr = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
+    }
 
-    key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
-    std::string withShiftAltGr = GetStrFromXEvent(&event);
-    entry->Set(_withShiftAltGr, String::NewFromUtf8(isolate, withShiftAltGr.c_str()));
+    {
+      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
+      std::string withShiftAltGr = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
+    }
 
-    result->Set(String::NewFromUtf8(isolate, code), entry);
+    NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
   }
 
   XFlush(display);
   XCloseDisplay(display);
 
-  args.GetReturnValue().Set(result);
+  return result;
 }
 
-void _GetCurrentKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  Isolate* isolate = args.GetIsolate();
+napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
+
+  napi_value result;
+  NAPI_CALL(env, napi_get_null(env, &result));
 
   Display *display;
   if (!(display = XOpenDisplay(""))) {
-    args.GetReturnValue().Set(Null(isolate));
-    return;
+    return result;
   }
 
   XkbRF_VarDefsRec vdr;
   char *tmp = NULL;
   int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
   if (res) {
-    Local<Object> result = Object::New(isolate);
-    result->Set(String::NewFromUtf8(isolate, "model"), String::NewFromUtf8(isolate, vdr.model ? vdr.model : ""));
-    result->Set(String::NewFromUtf8(isolate, "layout"), String::NewFromUtf8(isolate, vdr.layout ? vdr.layout : ""));
-    result->Set(String::NewFromUtf8(isolate, "variant"), String::NewFromUtf8(isolate, vdr.variant ? vdr.variant : ""));
-    result->Set(String::NewFromUtf8(isolate, "options"), String::NewFromUtf8(isolate, vdr.options ? vdr.options : ""));
-    result->Set(String::NewFromUtf8(isolate, "rules"), String::NewFromUtf8(isolate, tmp ? tmp : ""));
-    args.GetReturnValue().Set(result);
-  } else {
-    args.GetReturnValue().Set(Null(isolate));
+    NAPI_CALL(env, napi_create_object(env, &result));
+
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "model", vdr.model ? vdr.model : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "layout", vdr.layout ? vdr.layout : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "variant", vdr.variant ? vdr.variant : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "options", vdr.options ? vdr.options : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "rules", tmp ? tmp : ""));
   }
 
   XFlush(display);
   XCloseDisplay(display);
+  return result;
 }
 
-void _OnDidChangeKeyboardLayout(const v8::FunctionCallbackInfo<v8::Value>& args) {
-
+napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
+  return napi_fetch_undefined(env);
 }
 
-void _isISOKeyboard(const v8::FunctionCallbackInfo<v8::Value>& args) {
-
+napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
+  return napi_fetch_undefined(env);
 }
 
 } // namespace vscode_keyboard
