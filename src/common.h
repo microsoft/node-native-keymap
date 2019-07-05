@@ -75,6 +75,16 @@
 #define NAPI_CALL_RETURN_VOID(env, the_call)                             \
   NAPI_CALL_BASE(env, the_call, NAPI_RETVAL_NOTHING)
 
+// Returns empty if the_call doesn't return napi_ok.
+#define NAPI_CALL_RETURN_STATUS(env, the_call)                           \
+  do {                                                                   \
+    napi_status status = (the_call);                                     \
+    if (status != napi_ok) {                                             \
+      GET_AND_THROW_LAST_ERROR((env));                                   \
+      return status;                                                     \
+    }                                                                    \
+  } while (0)
+
 #define DECLARE_NAPI_PROPERTY(name, func)                                \
   { (name), NULL, (func), NULL, NULL, NULL, napi_default, NULL }
 

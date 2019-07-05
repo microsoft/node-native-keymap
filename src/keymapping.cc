@@ -11,6 +11,13 @@
 
 namespace vscode_keyboard {
 
+napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8Name, const char *value) {
+  napi_value _value;
+  NAPI_CALL_RETURN_STATUS(env, napi_create_string_utf8(env, value, NAPI_AUTO_LENGTH, &_value));
+  NAPI_CALL_RETURN_STATUS(env, napi_set_named_property(env, object, utf8Name, _value));
+  return napi_ok;
+}
+
 napi_value Init(napi_env env, napi_value exports) {
   {
     napi_value getKeyMap;
