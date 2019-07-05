@@ -18,6 +18,18 @@ napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object,
   return napi_ok;
 }
 
+napi_value napi_fetch_null(napi_env env) {
+  napi_value result;
+  NAPI_CALL(env, napi_get_null(env, &result));
+  return result;
+}
+
+napi_value napi_fetch_undefined(napi_env env) {
+  napi_value result;
+  NAPI_CALL(env, napi_get_undefined(env, &result));
+  return result;
+}
+
 napi_value Init(napi_env env, napi_value exports) {
   {
     napi_value getKeyMap;

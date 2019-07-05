@@ -42,6 +42,8 @@ napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info);
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info);
 
 napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8Name, const char *value);
+napi_value napi_fetch_null(napi_env env);
+napi_value napi_fetch_undefined(napi_env env);
 
 }  // namespace vscode_keyboard
 

@@ -337,9 +337,7 @@ namespace vscode_keyboard {
 
     char chr_layout_name[KL_NAMELENGTH];
     if (!GetKeyboardLayoutName(chr_layout_name)) {
-      napi_value result;
-      NAPI_CALL(env, napi_get_null(env, &result));
-      return result;
+      return napi_fetch_null(env);
     }
     std::string layout_name = chr_layout_name;
 
@@ -497,15 +495,11 @@ namespace vscode_keyboard {
     auto listener1 = new TfInputListener(data);
     listener1->StartListening();
 
-    napi_value result;
-    NAPI_CALL(env, napi_get_undefined(env, &result));
-    return result;
+    return napi_fetch_undefined(env);
   }
 
   napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
-    napi_value result;
-    NAPI_CALL(env, napi_get_undefined(env, &result));
-    return result;
+    return napi_fetch_undefined(env);
   }
 
 }  // namespace vscode_keyboard
