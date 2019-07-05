@@ -30,6 +30,12 @@ napi_value napi_fetch_undefined(napi_env env) {
   return result;
 }
 
+napi_value napi_fetch_boolean(napi_env env, bool value) {
+  napi_value result;
+  NAPI_CALL(env, napi_get_boolean(env, value, &result));
+  return result;
+}
+
 napi_value Init(napi_env env, napi_value exports) {
   {
     napi_value getKeyMap;

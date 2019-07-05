@@ -119,33 +119,25 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
 
     {
       std::pair<bool,std::string> value = ConvertKeyCodeToText(keyboardLayout, native_keycode, 0);
-      napi_value _value;
-      NAPI_CALL(env, napi_create_string_utf8(env, value.second.c_str(), NAPI_AUTO_LENGTH, &_value));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "value", _value));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.second.c_str()));
       NAPI_CALL(env, napi_set_named_property(env, entry, "valueIsDeadKey", value.first ? _true : _false));
     }
 
     {
       std::pair<bool,std::string> withShift = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask);
-      napi_value _withShift;
-      NAPI_CALL(env, napi_create_string_utf8(env, withShift.second.c_str(), NAPI_AUTO_LENGTH, &_withShift));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withShift", _withShift));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.second.c_str()));
       NAPI_CALL(env, napi_set_named_property(env, entry, "withShiftIsDeadKey", withShift.first ? _true : _false));
     }
 
     {
       std::pair<bool,std::string> withAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kAltKeyModifierMask);
-      napi_value _withAltGr;
-      NAPI_CALL(env, napi_create_string_utf8(env, withAltGr.second.c_str(), NAPI_AUTO_LENGTH, &_withAltGr));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withAltGr", _withAltGr));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.second.c_str()));
       NAPI_CALL(env, napi_set_named_property(env, entry, "withAltGrIsDeadKey", withAltGr.first ? _true : _false));
     }
 
     {
       std::pair<bool,std::string> withShiftAltGr = ConvertKeyCodeToText(keyboardLayout, native_keycode, kShiftKeyModifierMask | kAltKeyModifierMask);
-      napi_value _withShiftAltGr;
-      NAPI_CALL(env, napi_create_string_utf8(env, withShiftAltGr.second.c_str(), NAPI_AUTO_LENGTH, &_withShiftAltGr));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withShiftAltGr", _withShiftAltGr));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.second.c_str()));
       NAPI_CALL(env, napi_set_named_property(env, entry, "withShiftAltGrIsDeadKey", withShiftAltGr.first ? _true : _false));
     }
 
@@ -162,26 +154,20 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFStringRef sourceId = (CFStringRef) TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
   if(sourceId) {
-    napi_value _id;
-    NAPI_CALL(env, napi_create_string_utf8(env, std::string([(NSString *)sourceId UTF8String]).c_str(), NAPI_AUTO_LENGTH, &_id));
-    NAPI_CALL(env, napi_set_named_property(env, result, "id", _id));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "id", std::string([(NSString *)sourceId UTF8String]).c_str()));
   }
 
   TISInputSourceRef nameSource = TISCopyCurrentKeyboardInputSource();
   CFStringRef localizedName = (CFStringRef) TISGetInputSourceProperty(nameSource, kTISPropertyLocalizedName);
   if(localizedName) {
-    napi_value _localizedName;
-    NAPI_CALL(env, napi_create_string_utf8(env, std::string([(NSString *)localizedName UTF8String]).c_str(), NAPI_AUTO_LENGTH, &_localizedName));
-    NAPI_CALL(env, napi_set_named_property(env, result, "localizedName", _localizedName));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "localizedName", std::string([(NSString *)localizedName UTF8String]).c_str()));
   }
 
   NSArray* languages = (NSArray *) TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages);
   if (languages && [languages count] > 0) {
     NSString* lang = [languages objectAtIndex:0];
     if (lang) {
-      napi_value _lang;
-      NAPI_CALL(env, napi_create_string_utf8(env, std::string([lang UTF8String]).c_str(), NAPI_AUTO_LENGTH, &_lang));
-      NAPI_CALL(env, napi_set_named_property(env, result, "lang", _lang));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "lang", std::string([lang UTF8String]).c_str()));
     }
   }
 
@@ -244,20 +230,14 @@ napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
     CFNotificationSuspensionBehaviorDeliverImmediately
   );
 
-  napi_value result;
-  NAPI_CALL(env, napi_get_undefined(env, &result));
-  return result;
+  return napi_fetch_undefined(env);
 }
 
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
   if (KBGetLayoutType(LMGetKbdType()) == kKeyboardISO) {
-    napi_value _true;
-    NAPI_CALL(env, napi_get_boolean(env, true, &_true));
-    return _true;
+    return napi_fetch_boolean(env, true);
   } else {
-    napi_value _false;
-    NAPI_CALL(env, napi_get_boolean(env, false, &_false));
-    return _false;
+    return napi_fetch_boolean(env, false);
   }
 }
 
