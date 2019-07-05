@@ -6,7 +6,6 @@
 #ifndef KEYMAPPING_H_
 #define KEYMAPPING_H_
 
-#define NAPI_VERSION 3
 #include <node_api.h>
 
 #include <string>
