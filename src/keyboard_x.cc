@@ -171,33 +171,25 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
     {
       key_event->state = 0;
       std::string value = GetStrFromXEvent(&event);
-      napi_value _value;
-      NAPI_CALL(env, napi_create_string_utf8(env, value.c_str(), NAPI_AUTO_LENGTH, &_value));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "value", _value));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.c_str()));
     }
 
     {
       key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
       std::string withShift = GetStrFromXEvent(&event);
-      napi_value _withShift;
-      NAPI_CALL(env, napi_create_string_utf8(env, withShift.c_str(), NAPI_AUTO_LENGTH, &_withShift));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withShift", _withShift));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
     }
 
     {
       key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
       std::string withAltGr = GetStrFromXEvent(&event);
-      napi_value _withAltGr;
-      NAPI_CALL(env, napi_create_string_utf8(env, withAltGr.c_str(), NAPI_AUTO_LENGTH, &_withAltGr));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withAltGr", _withAltGr));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
     }
 
     {
       key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
       std::string withShiftAltGr = GetStrFromXEvent(&event);
-      napi_value _withShiftAltGr;
-      NAPI_CALL(env, napi_create_string_utf8(env, withShiftAltGr.c_str(), NAPI_AUTO_LENGTH, &_withShiftAltGr));
-      NAPI_CALL(env, napi_set_named_property(env, entry, "withShiftAltGr", _withShiftAltGr));
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
     }
 
     NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
@@ -225,31 +217,11 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   if (res) {
     NAPI_CALL(env, napi_create_object(env, &result));
 
-    {
-      napi_value _model;
-      NAPI_CALL(env, napi_create_string_utf8(env, vdr.model ? vdr.model : "", NAPI_AUTO_LENGTH, &_model));
-      NAPI_CALL(env, napi_set_named_property(env, result, "model", _model));
-    }
-    {
-      napi_value _layout;
-      NAPI_CALL(env, napi_create_string_utf8(env, vdr.layout ? vdr.layout : "", NAPI_AUTO_LENGTH, &_layout));
-      NAPI_CALL(env, napi_set_named_property(env, result, "layout", _layout));
-    }
-    {
-      napi_value _variant;
-      NAPI_CALL(env, napi_create_string_utf8(env, vdr.variant ? vdr.variant : "", NAPI_AUTO_LENGTH, &_variant));
-      NAPI_CALL(env, napi_set_named_property(env, result, "variant", _variant));
-    }
-    {
-      napi_value _options;
-      NAPI_CALL(env, napi_create_string_utf8(env, vdr.options ? vdr.options : "", NAPI_AUTO_LENGTH, &_options));
-      NAPI_CALL(env, napi_set_named_property(env, result, "options", _options));
-    }
-    {
-      napi_value _rules;
-      NAPI_CALL(env, napi_create_string_utf8(env, tmp ? tmp : "", NAPI_AUTO_LENGTH, &_rules));
-      NAPI_CALL(env, napi_set_named_property(env, result, "rules", _rules));
-    }
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "model", vdr.model ? vdr.model : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "layout", vdr.layout ? vdr.layout : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "variant", vdr.variant ? vdr.variant : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "options", vdr.options ? vdr.options : ""));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "rules", tmp ? tmp : ""));
   }
 
   XFlush(display);
@@ -258,15 +230,11 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
 }
 
 napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
-  napi_value result;
-  NAPI_CALL(env, napi_get_undefined(env, &result));
-  return result;
+  return napi_fetch_undefined(env);
 }
 
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
-  napi_value result;
-  NAPI_CALL(env, napi_get_undefined(env, &result));
-  return result;
+  return napi_fetch_undefined(env);
 }
 
 } // namespace vscode_keyboard
