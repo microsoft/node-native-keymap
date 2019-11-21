@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Get OS key mapping",
   "main": "index.js",
+  "typings": "index.d.ts",
   "scripts": {
     "test": "node test/test.js"
   },
