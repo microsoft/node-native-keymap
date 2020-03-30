@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <Msctf.h>
 #include <ime.h>
+#include <node.h>
 
 namespace {
 
@@ -466,6 +467,10 @@ namespace vscode_keyboard {
     }
   };
 
+  void ReleaseListener(void* data) {
+    reinterpret_cast<TfInputListener*>(data)->Release();
+  }
+
   napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
@@ -494,6 +499,8 @@ namespace vscode_keyboard {
 
     auto listener1 = new TfInputListener(data);
     listener1->StartListening();
+
+    node::AddEnvironmentCleanupHook(v8::Isolate::GetCurrent(), ReleaseListener, listener1);
 
     return napi_fetch_undefined(env);
   }
