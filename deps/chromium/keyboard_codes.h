@@ -14,7 +14,10 @@ enum KeyModifierMask {
   kControlKeyModifierMask = 1 << 1,
   kMetaKeyModifierMask = 1 << 2,
   kShiftKeyModifierMask = 1 << 3,
-  kNumLockKeyModifierMask = 1 << 4
+  kNumLockKeyModifierMask = 1 << 4,
+  kLevel3KeyModifierMask = 1 << 5,
+  kLevel5KeyModifierMask = 1 << 6
 };
 
 #endif  // UI_EVENTS_KEYCODES_KEYBOARD_CODES_H_
+
