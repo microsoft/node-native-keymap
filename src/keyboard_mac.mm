@@ -181,6 +181,8 @@ typedef struct {
 } NotificationCallbackData;
 
 void notificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+  napi_handle_scope scope;
+
   NotificationCallbackData *data = (NotificationCallbackData *)observer;
   napi_env env = data->env;
   napi_async_context context = data->context;
