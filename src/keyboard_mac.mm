@@ -187,6 +187,7 @@ void notificationCallback(CFNotificationCenterRef center, void *observer, CFStri
   napi_env env = data->env;
   napi_async_context context = data->context;
   napi_ref funcRef = data->funcRef;
+  napi_open_handle_scope(env, &scope);
 
   napi_value global;
   NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
@@ -196,6 +197,8 @@ void notificationCallback(CFNotificationCenterRef center, void *observer, CFStri
 
   std::vector<napi_value> argv;
   NAPI_CALL_RETURN_VOID(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL));
+  
+  napi_close_handle_scope(env, scope);
 }
 
 napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
