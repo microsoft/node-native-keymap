@@ -31,6 +31,8 @@ class KeyModifierMaskToXModifierMask {
     meta_modifier = 0;
     num_lock_modifier = 0;
     mode_switch_modifier = 0;
+    level3_modifier = 0;  // AltGr is often mapped to the level3 modifier
+    level5_modifier = 0;  // AltGr is mapped to the level5 modifier in the Neo layout family
 
     if (!display) {
       return;
@@ -50,8 +52,6 @@ class KeyModifierMaskToXModifierMask {
           continue;
         }
 
-        // TODO: Also check for XK_ISO_Level3_Shift	0xFE03
-
         if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
           alt_modifier = 1 << mod_index;
         }
@@ -63,6 +63,12 @@ class KeyModifierMaskToXModifierMask {
         }
         if (keysym == XK_Num_Lock) {
           num_lock_modifier = 1 << mod_index;
+        }
+        if (keysym == XK_ISO_Level3_Shift) {
+          level3_modifier = 1 << mod_index;
+        }
+        if (keysym == XK_ISO_Level5_Shift) {
+          level5_modifier = 1 << mod_index;
         }
       }
     }
@@ -94,6 +100,14 @@ class KeyModifierMaskToXModifierMask {
       x_modifier |= num_lock_modifier;
     }
 
+    if (keyMod & kLevel3KeyModifierMask) {
+      x_modifier |= level3_modifier;
+    }
+
+    if (keyMod & kLevel5KeyModifierMask) {
+      x_modifier |= level5_modifier;
+    }
+
     return x_modifier;
   }
 
@@ -106,6 +120,8 @@ class KeyModifierMaskToXModifierMask {
   int meta_modifier;
   int num_lock_modifier;
   int mode_switch_modifier;
+  int level3_modifier;
+  int level5_modifier;
 
   DISALLOW_COPY_AND_ASSIGN(KeyModifierMaskToXModifierMask);
 };
@@ -181,15 +197,29 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
     }
 
     {
-      key_event->state = mask_provider->XModFromKeyMod(kControlKeyModifierMask | kAltKeyModifierMask);
+      key_event->state = mask_provider->XModFromKeyMod(kLevel3KeyModifierMask);
       std::string withAltGr = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
     }
 
     {
-      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask);
+      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kLevel3KeyModifierMask);
       std::string withShiftAltGr = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
+    }
+
+    {
+      // level 5 is important for the Neo layout family
+      key_event->state = mask_provider->XModFromKeyMod(kLevel5KeyModifierMask);
+      std::string withLevel5 = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel5", withLevel5.c_str()));
+    }
+
+    {
+      // level3 + level5 is Level 6 in terms of the Neo layout family. (Shift + level5 has no special meaning.)
+      key_event->state = mask_provider->XModFromKeyMod(kLevel3KeyModifierMask | kLevel5KeyModifierMask);
+      std::string withLevel3Level5 = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel3Level5", withLevel3Level5.c_str()));
     }
 
     NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
