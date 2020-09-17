@@ -5,6 +5,7 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 * On Debian-based Linux: `sudo apt-get install libx11-dev libxkbfile-dev`
 * On Red Hat-based Linux: `sudo yum install libx11-devel.x86_64 libxkbfile-devel.x86_64 # or .i686`
+* On SUSE-based Linux: `sudo zypper install libX11-devel libxkbfile-devel`
 * On FreeBSD: `sudo pkg install libX11`
 
 ```sh
