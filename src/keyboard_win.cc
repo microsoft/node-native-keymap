@@ -426,10 +426,11 @@ namespace vscode_keyboard {
       /* [in] */ __RPC__in REFGUID guidProfile,
       /* [in] */ HKL hkl,
       /* [in] */ DWORD dwFlags) override {
-
+      napi_handle_scope scope;
       napi_env env = data->env;
       napi_async_context context = data->context;
       napi_ref funcRef = data->funcRef;
+      napi_open_handle_scope(env, &scope);
 
       napi_value global;
       NAPI_CALL_BASE(env, napi_get_global(env, &global), S_OK);
@@ -439,6 +440,8 @@ namespace vscode_keyboard {
 
       std::vector<napi_value> argv;
       NAPI_CALL_BASE(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL), S_OK);
+
+      napi_close_handle_scope(env, scope);
 
       return S_OK;
     }
