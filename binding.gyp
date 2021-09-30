@@ -49,6 +49,18 @@
               '-framework Cocoa'
             ]
           }
+        }],
+        ['OS=="aix"', {
+          "sources": [
+            "deps/chromium/x/keysym_to_unicode.cc",
+            "src/keyboard_x.cc"
+          ],
+          "link_settings": {
+            "libraries": [
+              "-lX11",
+              "-lxkbfile"
+            ]
+          }
         }]
       ]
     }
