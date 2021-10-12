@@ -48,6 +48,7 @@ export interface IWindowsKeyboardLayoutInfo {
 
 export interface ILinuxKeyboardLayoutInfo {
 	model: string;
+	group: number;
 	layout: string;
 	variant: string;
 	options: string;

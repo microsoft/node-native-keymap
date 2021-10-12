@@ -18,6 +18,13 @@ napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object,
   return napi_ok;
 }
 
+napi_status napi_set_named_property_int32(napi_env env, napi_value object, const char *utf8Name, int value) {
+  napi_value _value;
+  NAPI_CALL_RETURN_STATUS(env, napi_create_int32(env, value, &_value));
+  NAPI_CALL_RETURN_STATUS(env, napi_set_named_property(env, object, utf8Name, _value));
+  return napi_ok;
+}
+
 napi_value napi_fetch_null(napi_env env) {
   napi_value result;
   NAPI_CALL(env, napi_get_null(env, &result));

@@ -33,10 +33,16 @@ class KeyModifierMaskToXModifierMask {
     mode_switch_modifier = 0;
     level3_modifier = 0;  // AltGr is often mapped to the level3 modifier
     level5_modifier = 0;  // AltGr is mapped to the level5 modifier in the Neo layout family
+    effective_group_index = 0;
 
     if (!display) {
       return;
     }
+
+    // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
+    XkbStateRec xkbState;
+    XkbGetState(display, XkbUseCoreKbd, &xkbState);
+    effective_group_index = xkbState.group;
 
     XModifierKeymap* mod_map = XGetModifierMapping(display);
     int max_mod_keys = mod_map->max_keypermod;
@@ -76,7 +82,7 @@ class KeyModifierMaskToXModifierMask {
     XFreeModifiermap(mod_map);
   }
 
-  int XModFromKeyMod(int keyMod) {
+  int XStateFromKeyMod(int keyMod) {
     int x_modifier = 0;
 
     // Ctrl + Alt => AltGr
@@ -108,6 +114,9 @@ class KeyModifierMaskToXModifierMask {
       x_modifier |= level5_modifier;
     }
 
+    // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#xkb_state_to_core_protocol_state_transformation
+    x_modifier |= (effective_group_index << 13);
+
     return x_modifier;
   }
 
@@ -122,6 +131,7 @@ class KeyModifierMaskToXModifierMask {
   int mode_switch_modifier;
   int level3_modifier;
   int level5_modifier;
+  int effective_group_index;
 
   DISALLOW_COPY_AND_ASSIGN(KeyModifierMaskToXModifierMask);
 };
@@ -191,33 +201,33 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
     }
 
     {
-      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask);
+      key_event->state = mask_provider->XStateFromKeyMod(kShiftKeyModifierMask);
       std::string withShift = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
     }
 
     {
-      key_event->state = mask_provider->XModFromKeyMod(kLevel3KeyModifierMask);
+      key_event->state = mask_provider->XStateFromKeyMod(kLevel3KeyModifierMask);
       std::string withAltGr = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
     }
 
     {
-      key_event->state = mask_provider->XModFromKeyMod(kShiftKeyModifierMask | kLevel3KeyModifierMask);
+      key_event->state = mask_provider->XStateFromKeyMod(kShiftKeyModifierMask | kLevel3KeyModifierMask);
       std::string withShiftAltGr = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
     }
 
     {
       // level 5 is important for the Neo layout family
-      key_event->state = mask_provider->XModFromKeyMod(kLevel5KeyModifierMask);
+      key_event->state = mask_provider->XStateFromKeyMod(kLevel5KeyModifierMask);
       std::string withLevel5 = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel5", withLevel5.c_str()));
     }
 
     {
       // level3 + level5 is Level 6 in terms of the Neo layout family. (Shift + level5 has no special meaning.)
-      key_event->state = mask_provider->XModFromKeyMod(kLevel3KeyModifierMask | kLevel5KeyModifierMask);
+      key_event->state = mask_provider->XStateFromKeyMod(kLevel3KeyModifierMask | kLevel5KeyModifierMask);
       std::string withLevel3Level5 = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel3Level5", withLevel3Level5.c_str()));
     }
@@ -241,6 +251,11 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
     return result;
   }
 
+  // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
+  XkbStateRec xkbState;
+  XkbGetState(display, XkbUseCoreKbd, &xkbState);
+  int effective_group_index = xkbState.group;
+
   XkbRF_VarDefsRec vdr;
   char *tmp = NULL;
   int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
@@ -248,6 +263,7 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
     NAPI_CALL(env, napi_create_object(env, &result));
 
     NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "model", vdr.model ? vdr.model : ""));
+    NAPI_CALL(env, napi_set_named_property_int32(env, result, "group", effective_group_index));
     NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "layout", vdr.layout ? vdr.layout : ""));
     NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "variant", vdr.variant ? vdr.variant : ""));
     NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "options", vdr.options ? vdr.options : ""));
