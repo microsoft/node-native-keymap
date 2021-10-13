@@ -275,7 +275,135 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   return result;
 }
 
+typedef struct {
+  napi_env env;
+  napi_threadsafe_function tsfn;
+} NotificationCallbackData;
+
+static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
+  // env may be NULL if nodejs is shutting down
+  if (env != NULL) {
+    napi_value global;
+    NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
+
+    std::vector<napi_value> argv;
+    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, global, func, argv.size(), argv.data(), NULL));
+  }
+}
+
+typedef struct {
+  int effective_group_index;
+  std::string layout;
+  std::string variant;
+} KbState;
+
+bool kbStatesEqual(KbState *a, KbState *b) {
+  return (
+    a->effective_group_index == b->effective_group_index
+    && a->layout == b->layout
+    && a->variant == b->variant
+  );
+}
+
+void readKbState(Display *display, KbState *dst) {
+  // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
+  // Get effective group index
+  XkbStateRec xkbState;
+  XkbGetState(display, XkbUseCoreKbd, &xkbState);
+  dst->effective_group_index = xkbState.group;
+
+  XkbRF_VarDefsRec vdr;
+  char *tmp = NULL;
+  int res = XkbRF_GetNamesProp(display, &tmp, &vdr);
+  if (res) {
+    dst->layout = (vdr.layout ? vdr.layout : "");
+    dst->variant = (vdr.variant ? vdr.variant : "");
+  } else {
+    dst->layout = "";
+    dst->variant = "";
+  }
+}
+
+void* listenToXEvents(void *arg) {
+  NotificationCallbackData *data = (NotificationCallbackData*)arg;
+
+  Display *display;
+  if (!(display = XOpenDisplay(""))) {
+    return NULL;
+  }
+
+  int xkblibMajor = XkbMajorVersion;
+  int xkblibMinor = XkbMinorVersion;
+  if (!XkbLibraryVersion(&xkblibMajor, &xkblibMinor)) {
+    return NULL;
+  }
+
+  int opcode = 0;
+  int xkbBaseEventCode = 0;
+  int xkbBaseErrorCode = 0;
+  if (!XkbQueryExtension(display, &opcode, &xkbBaseEventCode, &xkbBaseErrorCode, &xkblibMajor, &xkblibMinor)) {
+    return NULL;
+  }
+
+  // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#xkb_event_types
+  // Listen only to the `XkbStateNotify` event
+  XkbSelectEvents(display, XkbUseCoreKbd, XkbAllEventsMask, XkbStateNotifyMask);
+
+  KbState lastState;
+  readKbState(display, &lastState);
+
+  NAPI_CALL(data->env, napi_acquire_threadsafe_function(data->tsfn));
+
+  XkbEvent event;
+  KbState currentState;
+  while (true) {
+    XNextEvent(display, &event.core);
+
+    if (event.type == xkbBaseEventCode && event.any.xkb_type == XkbStateNotify) {
+      readKbState(display, &currentState);
+      // printf("current state: %d | %s | %s\n", currentState.effective_group_index, currentState.layout.c_str(), currentState.variant.c_str());
+      if (!kbStatesEqual(&lastState, &currentState)) {
+        lastState.effective_group_index = currentState.effective_group_index;
+        lastState.layout = currentState.layout;
+        lastState.variant = currentState.variant;
+
+        napi_call_threadsafe_function(data->tsfn, data, napi_tsfn_blocking);
+      }
+    }
+  }
+
+  NAPI_CALL(data->env, napi_release_threadsafe_function(data->tsfn, napi_tsfn_release));
+
+  return NULL;
+}
+
 napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
+  size_t argc = 2;
+  napi_value args[2];
+  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
+
+  napi_valuetype valuetype0;
+  NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
+  NAPI_ASSERT(env, valuetype0 == napi_function, "Wrong type of arguments. Expects a function as first argument.");
+
+  napi_value func = args[0];
+
+  napi_value resource_name;
+  NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
+
+  // Convert the callback retrieved from JavaScript into a thread-safe function
+  napi_threadsafe_function tsfn;
+  NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL, NULL, NULL, NotifyJS, &tsfn));
+
+  NotificationCallbackData *data = new NotificationCallbackData();
+  data->env = env;
+  data->tsfn = tsfn;
+
+  pthread_t tid;
+  pthread_create(&tid, NULL, &listenToXEvents, data);
+
   return napi_fetch_undefined(env);
 }
 
