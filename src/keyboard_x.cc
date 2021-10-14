@@ -275,11 +275,6 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   return result;
 }
 
-typedef struct {
-  napi_env env;
-  napi_threadsafe_function tsfn;
-} NotificationCallbackData;
-
 static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
   // env may be NULL if nodejs is shutting down
   if (env != NULL) {
@@ -289,6 +284,13 @@ static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
     std::vector<napi_value> argv;
     NAPI_CALL_RETURN_VOID(env, napi_call_function(env, global, func, argv.size(), argv.data(), NULL));
   }
+}
+
+static void FinalizeThreadsafeFunction(napi_env env, void* raw_data, void* hint) {
+  NotificationCallbackData *data;
+  napi_get_instance_data(env, (void**)&data);
+  pthread_join(data->tid, NULL);
+  data->tsfn = NULL;
 }
 
 typedef struct {
@@ -325,7 +327,7 @@ void readKbState(Display *display, KbState *dst) {
 }
 
 void* listenToXEvents(void *arg) {
-  NotificationCallbackData *data = (NotificationCallbackData*)arg;
+  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
 
   Display *display;
   if (!(display = XOpenDisplay(""))) {
@@ -352,8 +354,6 @@ void* listenToXEvents(void *arg) {
   KbState lastState;
   readKbState(display, &lastState);
 
-  NAPI_CALL(data->env, napi_acquire_threadsafe_function(data->tsfn));
-
   XkbEvent event;
   KbState currentState;
   while (true) {
@@ -367,12 +367,14 @@ void* listenToXEvents(void *arg) {
         lastState.layout = currentState.layout;
         lastState.variant = currentState.variant;
 
-        napi_call_threadsafe_function(data->tsfn, data, napi_tsfn_blocking);
+        // No need to call napi_acquire_threadsafe_function because
+        // the refcount is set to 1 in the main thread.
+        napi_call_threadsafe_function(data->tsfn, NULL, napi_tsfn_blocking);
       }
     }
   }
 
-  NAPI_CALL(data->env, napi_release_threadsafe_function(data->tsfn, napi_tsfn_release));
+  napi_release_threadsafe_function(data->tsfn, napi_tsfn_release);
 
   return NULL;
 }
@@ -380,6 +382,8 @@ void* listenToXEvents(void *arg) {
 napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
   size_t argc = 2;
   napi_value args[2];
+  NotificationCallbackData *data;
+  NAPI_CALL(env, napi_get_instance_data(env, (void**)&data));
   NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
   NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
@@ -394,15 +398,11 @@ napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
   NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
 
   // Convert the callback retrieved from JavaScript into a thread-safe function
-  napi_threadsafe_function tsfn;
-  NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL, NULL, NULL, NotifyJS, &tsfn));
+  NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL,
+                                                 FinalizeThreadsafeFunction, NULL, NotifyJS,
+                                                 &data->tsfn));
 
-  NotificationCallbackData *data = new NotificationCallbackData();
-  data->env = env;
-  data->tsfn = tsfn;
-
-  pthread_t tid;
-  pthread_create(&tid, NULL, &listenToXEvents, data);
+  pthread_create(&data->tid, NULL, &listenToXEvents, data);
 
   return napi_fetch_undefined(env);
 }
