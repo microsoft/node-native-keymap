@@ -43,7 +43,19 @@ napi_value napi_fetch_boolean(napi_env env, bool value) {
   return result;
 }
 
+#if defined(__unix__)
+void DeleteInstanceData(napi_env env, void *raw_data, void *hint) {
+  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(raw_data);
+  delete data;
+}
+#endif
+
 napi_value Init(napi_env env, napi_value exports) {
+#if defined(__unix__)
+  NotificationCallbackData *data = new NotificationCallbackData();
+  NAPI_CALL(env, napi_set_instance_data(env, data, DeleteInstanceData, NULL));
+#endif
+
   {
     napi_value getKeyMap;
     NAPI_CALL(env, napi_create_function(env, NULL, 0, _GetKeyMap, NULL, &getKeyMap));
