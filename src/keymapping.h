@@ -35,15 +35,6 @@ typedef struct {
   const char* code;
 } KeycodeMapEntry;
 
-#if defined(__unix__)
-typedef struct {
-  pthread_t tid;
-  napi_threadsafe_function tsfn;
-} NotificationCallbackData;
-
-void DeleteInstanceData(napi_env env, void *raw_data, void *hint);
-#endif
-
 napi_value _GetKeyMap(napi_env env, napi_callback_info info);
 napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info);
 napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info);
