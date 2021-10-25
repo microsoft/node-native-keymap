@@ -289,7 +289,9 @@ static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
 static void FinalizeThreadsafeFunction(napi_env env, void* raw_data, void* hint) {
   NotificationCallbackData *data;
   napi_get_instance_data(env, (void**)&data);
-  pthread_join(data->tid, NULL);
+  // TODO: signal to the other thread that it should break the while (true) loop
+  // only then consider uncommenting the next line:
+  // pthread_join(data->tid, NULL);
   data->tsfn = NULL;
 }
 
