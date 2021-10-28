@@ -195,7 +195,7 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
 
     key_event->keycode = native_keycode;
     {
-      key_event->state = 0;
+      key_event->state = mask_provider->XStateFromKeyMod(0);
       std::string value = GetStrFromXEvent(&event);
       NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.c_str()));
     }
