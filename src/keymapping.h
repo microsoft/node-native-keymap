@@ -12,6 +12,10 @@
 #include <vector>
 #include "../deps/chromium/keyboard_codes.h"
 
+#if defined(__unix__)
+#include <pthread.h>
+#endif
+
 #define CHECK_OK(x) if (x != napi_ok) return NULL
 
 namespace vscode_keyboard {
