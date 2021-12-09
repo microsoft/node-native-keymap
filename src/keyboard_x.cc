@@ -369,6 +369,11 @@ void* listenToXEvents(void *arg) {
         lastState.layout = currentState.layout;
         lastState.variant = currentState.variant;
 
+        if (data->tsfn == NULL) {
+          // This indicates we are in the shutdown phase and the thread safe function has been finalized
+          return NULL;
+        }
+
         // No need to call napi_acquire_threadsafe_function because
         // the refcount is set to 1 in the main thread.
         napi_call_threadsafe_function(data->tsfn, NULL, napi_tsfn_blocking);
