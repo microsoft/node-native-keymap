@@ -67,11 +67,11 @@ namespace {
 
 namespace vscode_keyboard {
 
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, win, code}
-#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
-#include "../deps/chromium/keycode_converter_data.inc"
-#undef USB_KEYMAP
-#undef USB_KEYMAP_DECLARATION
+#define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, win, code}
+#define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#include "../deps/chromium/dom_code_data.inc"
+#undef DOM_CODE
+#undef DOM_CODE_DECLARATION
 
   typedef struct {
     int vkey;

@@ -72,11 +72,11 @@ std::pair<bool,std::string> ConvertKeyCodeToText(const UCKeyboardLayout* keyboar
 namespace vscode_keyboard {
 
 
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, mac, code}
-#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
-#include "../deps/chromium/keycode_converter_data.inc"
-#undef USB_KEYMAP
-#undef USB_KEYMAP_DECLARATION
+#define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, mac, code}
+#define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#include "../deps/chromium/dom_code_data.inc"
+#undef DOM_CODE
+#undef DOM_CODE_DECLARATION
 
 napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
 
@@ -197,7 +197,7 @@ void notificationCallback(CFNotificationCenterRef center, void *observer, CFStri
 
   std::vector<napi_value> argv;
   NAPI_CALL_RETURN_VOID(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL));
-  
+
   napi_close_handle_scope(env, scope);
 }
 
