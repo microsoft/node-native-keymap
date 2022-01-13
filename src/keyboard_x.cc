@@ -155,11 +155,11 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
-#define USB_KEYMAP_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
+#define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
+#define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
 #include "../deps/chromium/keycode_converter_data.inc"
-#undef USB_KEYMAP
-#undef USB_KEYMAP_DECLARATION
+#undef DOM_CODE
+#undef DOM_CODE_DECLARATION
 
 napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
 
