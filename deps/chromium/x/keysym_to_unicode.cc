@@ -1,4 +1,8 @@
-// [13.12.2016] https://cs.chromium.org/chromium/src/ui/events/keycodes/keysym_to_unicode.cc
+// ----------------------------------------------------------------------------------------------------------------
+//
+// [13.01.2022] https://source.chromium.org/chromium/chromium/src/+/main:ui/events/keycodes/keysym_to_unicode.cc
+//
+// ----------------------------------------------------------------------------------------------------------------
 
 // Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -47,7 +51,7 @@
 namespace ui {
 
 const struct {
-  KeySym keysym;
+  uint32_t keysym;
   uint16_t unicode;
 } g_keysym_to_unicode_table[] = {
   // Control characters
@@ -849,7 +853,18 @@ class KeySymToUnicode {
     return instance;
   }
 
-  uint16_t UnicodeFromKeySym(KeySym keysym) const {
+  KeySymToUnicode()
+      : keysym_to_unicode_map_(base::size(g_keysym_to_unicode_table)) {
+    for (size_t i = 0; i < base::size(g_keysym_to_unicode_table); ++i) {
+      keysym_to_unicode_map_[g_keysym_to_unicode_table[i].keysym] =
+          g_keysym_to_unicode_table[i].unicode;
+    }
+  }
+
+  KeySymToUnicode(const KeySymToUnicode&) = delete;
+  KeySymToUnicode& operator=(const KeySymToUnicode&) = delete;
+
+  uint16_t UnicodeFromKeySym(uint32_t keysym) const {
     // Latin-1 characters have the same representation.
     if ((0x0020 <= keysym && keysym <= 0x007e) ||
         (0x00a0 <= keysym && keysym <= 0x00ff))
@@ -864,29 +879,18 @@ class KeySymToUnicode {
     }
 
     // Other KeySyms which are not Unicode-style.
-    KeySymToUnicodeMap::const_iterator i =
-        keysym_to_unicode_map_.find(keysym);
+    auto i = keysym_to_unicode_map_.find(keysym);
     return i != keysym_to_unicode_map_.end() ? i->second : 0;
   }
 
  private:
-  KeySymToUnicode()
-      : keysym_to_unicode_map_(arraysize(g_keysym_to_unicode_table)) {
-    for (size_t i = 0; i < arraysize(g_keysym_to_unicode_table); ++i) {
-      keysym_to_unicode_map_[g_keysym_to_unicode_table[i].keysym] =
-          g_keysym_to_unicode_table[i].unicode;
-    }
-  }
-
-  typedef std::unordered_map<KeySym, uint16_t> KeySymToUnicodeMap;
+  typedef std::unordered_map<uint32_t, uint16_t> KeySymToUnicodeMap;
   KeySymToUnicodeMap keysym_to_unicode_map_;
-
-  DISALLOW_COPY_AND_ASSIGN(KeySymToUnicode);
 };
 
 uint16_t GetUnicodeCharacterFromXKeySym(unsigned long keysym) {
   return KeySymToUnicode::GetInstance().UnicodeFromKeySym(
-      static_cast<KeySym>(keysym));
+      static_cast<uint32_t>(keysym));
 }
 
 }  // namespace ui

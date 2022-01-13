@@ -133,7 +133,8 @@ class KeyModifierMaskToXModifierMask {
   int level5_modifier;
   int effective_group_index;
 
-  DISALLOW_COPY_AND_ASSIGN(KeyModifierMaskToXModifierMask);
+  KeyModifierMaskToXModifierMask(const KeyModifierMaskToXModifierMask&) = delete;
+  KeyModifierMaskToXModifierMask& operator=(const KeyModifierMaskToXModifierMask&) = delete;
 };
 
 std::string GetStrFromXEvent(const XEvent* xev) {
