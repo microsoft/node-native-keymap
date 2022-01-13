@@ -39,20 +39,19 @@ typedef struct {
   const char* code;
 } KeycodeMapEntry;
 
-#if defined(__unix__)
 typedef struct {
+#if defined(__unix__)
   pthread_t tid;
+#endif
   napi_threadsafe_function tsfn;
 } NotificationCallbackData;
 
-void DeleteInstanceData(napi_env env, void *raw_data, void *hint);
-#endif
-
 napi_value _GetKeyMap(napi_env env, napi_callback_info info);
 napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info);
-napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info);
+void registerKeyboardLayoutChangeListener(NotificationCallbackData *data);
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info);
 
+void invokeNotificationCallback(NotificationCallbackData *data);
 napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8Name, const char *value);
 napi_status napi_set_named_property_int32(napi_env env, napi_value object, const char *utf8Name, int value);
 napi_value napi_fetch_null(napi_env env);

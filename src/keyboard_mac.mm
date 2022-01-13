@@ -174,59 +174,12 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   return result;
 }
 
-typedef struct {
-  napi_env env;
-  napi_async_context context;
-  napi_ref funcRef;
-} NotificationCallbackData;
-
 void notificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-  napi_handle_scope scope;
-
   NotificationCallbackData *data = (NotificationCallbackData *)observer;
-  napi_env env = data->env;
-  napi_async_context context = data->context;
-  napi_ref funcRef = data->funcRef;
-  napi_open_handle_scope(env, &scope);
-
-  napi_value global;
-  NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
-
-  napi_value func;
-  NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, funcRef, &func));
-
-  std::vector<napi_value> argv;
-  NAPI_CALL_RETURN_VOID(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL));
-
-  napi_close_handle_scope(env, scope);
+  invokeNotificationCallback(data);
 }
 
-napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
-  size_t argc = 2;
-  napi_value args[2];
-  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
-
-  NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
-
-  napi_valuetype valuetype0;
-  NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-  NAPI_ASSERT(env, valuetype0 == napi_function, "Wrong type of arguments. Expects a function as first argument.");
-
-  napi_value func = args[0];
-  napi_ref funcRef;
-  NAPI_CALL(env, napi_create_reference(env, func, 1, &funcRef));
-
-  napi_value resource_name;
-  NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
-
-  napi_async_context context;
-  NAPI_CALL(env, napi_async_init(env, func, resource_name, &context));
-
-  NotificationCallbackData *data = new NotificationCallbackData();
-  data->env = env;
-  data->context = context;
-  data->funcRef = funcRef;
-
+void registerKeyboardLayoutChangeListener(NotificationCallbackData *data) {
   CFNotificationCenterRef center = CFNotificationCenterGetDistributedCenter();
 
   // add an observer
@@ -234,8 +187,6 @@ napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
     kTISNotifySelectedKeyboardInputSourceChanged, NULL,
     CFNotificationSuspensionBehaviorDeliverImmediately
   );
-
-  return napi_fetch_undefined(env);
 }
 
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
