@@ -1,8 +1,14 @@
+// ----------------------------------------------------------------------------------------------------------------
+//
+// [13.01.2022] https://source.chromium.org/chromium/chromium/src/+/main:ui/events/keycodes/dom/dom_code_data.inc
+//
+// ----------------------------------------------------------------------------------------------------------------
+
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This file has no header guard because it is explicily intended
+// This file has no header guard because it is explicitly intended
 // to be included more than once with different definitions of the
 // macros DOM_CODE and DOM_CODE_DECLARATION.
 
@@ -54,10 +60,6 @@
 //        are distinct from UI Events' "ContextMenu", which corresponds to
 //        USB 0x070065 [Keyboard Application] via evdev 0x7F KEY_COMPOSE,
 //        following Windows convention.)
-//
-//  [L3]  Linux flattens both USB 0x070048 [Keyboard Pause] and 0x0C00B1
-//        [Media Pause] to 0x77 KEY_PAUSE. We map the former, since [1]
-//        defines a 'Pause' code but no 'MediaPause' code.
 
 // Windows notes:
 //
@@ -80,6 +82,13 @@
 //       Apple keyboards with USB 0x070049 [Insert] labelled "Help" have not
 //       been made since 2007.
 
+// ChromeOS notes:
+//
+//  Any keys that are added or updated specifically for use in the ChromeOS
+//  top-row should also be updated in sections of Input Diagnostics:
+//    ash/webui/diagnostics_ui/mojom/input_data_provider.mojom: enum TopRowKey
+//    ash/webui/diagnostics_ui/backend/input_data_provider_keyboard.cc: kScancodeMapping
+
 DOM_CODE_DECLARATION {
 
   //            USB     evdev    XKB     Win     Mac   Code
@@ -97,6 +106,20 @@ DOM_CODE_DECLARATION {
   DOM_CODE(0x000014, 0x0000, 0x0000, 0x0000, 0xffff, "Suspend", SUSPEND),
   DOM_CODE(0x000015, 0x0000, 0x0000, 0x0000, 0xffff, "Resume", RESUME),
   DOM_CODE(0x000016, 0x0000, 0x0000, 0x0000, 0xffff, "Turbo", TURBO),
+  // TODO(b/146683484): HID usage for privacy screen control is not yet
+  // approved. Once it is update the code here.
+  // TODO(https://crbug.com/952051): Privacy screen will not have a DOM |code|
+  // name defined as it is not exposed to web content.
+  DOM_CODE(0x000017, 0x0279, 0x0281, 0x0000, 0xffff, "PrivacyScreenToggle",
+             PRIVACY_SCREEN_TOGGLE),  // Privacy Screen Toggle
+  // As with privacy screen, microphone mute toggle will not be exposed to web
+  // content.
+  DOM_CODE(0x000018, 0x00f8, 0x0100, 0x0000, 0xffff, "MicrophoneMuteToggle",
+             MICROPHONE_MUTE_TOGGLE),  // Microphone Mute Toggle
+  // As with privacy screen, keyboard backlight toggle will not be exposed to web
+  // content.
+  DOM_CODE(0x000019, 0x00e4, 0x00ec, 0x0000, 0xffff, "KeyboardBacklightToggle",
+             KEYBOARD_BACKLIGHT_TOGGLE),  // Keyboard Backlight Toggle
 
   // =========================================
   // USB Usage Page 0x01: Generic Desktop Page
@@ -107,6 +130,9 @@ DOM_CODE_DECLARATION {
   //            USB     evdev    XKB     Win     Mac
   DOM_CODE(0x010082, 0x008e, 0x0096, 0xe05f, 0xffff, "Sleep", SLEEP), // SystemSleep
   DOM_CODE(0x010083, 0x008f, 0x0097, 0xe063, 0xffff, "WakeUp", WAKE_UP),
+  DOM_CODE(0x0100b5, 0x00e3, 0x00eb, 0x0000, 0xffff, "DisplayToggleIntExt",
+             DISPLAY_TOGGLE_INT_EXT),  // System Display Toggle Int/Ext
+
 
   // =========================================
   // USB Usage Page 0x07: Keyboard/Keypad Page
@@ -186,7 +212,7 @@ DOM_CODE_DECLARATION {
   // The keycap varies on international keyboards:
   //   Dan: '*  Dutch: <>  Ger: #'  UK: #~
   // TODO(garykac): Verify Mac intl keyboard.
-  DOM_CODE(0x070032, 0x0000, 0x0000, 0x0000, 0xffff, "IntlHash", INTL_HASH),
+  //DOM_CODE(0x070032, 0x0000, 0x0000, 0x0000, 0xffff, NULL, INTL_HASH),
   DOM_CODE(0x070033, 0x0027, 0x002f, 0x0027, 0x0029, "Semicolon", SEMICOLON), // ;:
   DOM_CODE(0x070034, 0x0028, 0x0030, 0x0028, 0x0027, "Quote", QUOTE), // '"
   DOM_CODE(0x070035, 0x0029, 0x0031, 0x0029, 0x0032, "Backquote", BACKQUOTE), // `~
@@ -303,7 +329,7 @@ DOM_CODE_DECLARATION {
   DOM_CODE(0x070087, 0x0059, 0x0061, 0x0073, 0x005e, "IntlRo", INTL_RO),
   // International2
   // USB#070088 is used as Japanese Hiragana/Katakana key.
-  DOM_CODE(0x070088, 0x005d, 0x0065, 0x0070, 0x0068, "KanaMode", KANA_MODE),
+  DOM_CODE(0x070088, 0x005d, 0x0065, 0x0070, 0xffff, "KanaMode", KANA_MODE),
   // International3
   // USB#070089 is used as Japanese Yen key.
   DOM_CODE(0x070089, 0x007c, 0x0084, 0x007d, 0x005d, "IntlYen", INTL_YEN),
@@ -319,11 +345,13 @@ DOM_CODE_DECLARATION {
   //DOM_CODE(0x07008f, 0x0000, 0x0000, 0x0000, 0xffff, NULL, INTERNATIONAL9),
 
   // LANG1
-  // USB#070090 is used as Korean Hangul/English toggle key.
-  DOM_CODE(0x070090, 0x007a, 0x0082, 0x0072, 0xffff, "Lang1", LANG1),
+  // USB#070090 is used as Korean Hangul/English toggle key, and as the Kana key
+  // on the Apple Japanese keyboard.
+  DOM_CODE(0x070090, 0x007a, 0x0082, 0x0072, 0x0068, "Lang1", LANG1),
   // LANG2
-  // USB#070091 is used as Korean Hanja conversion key.
-  DOM_CODE(0x070091, 0x007b, 0x0083, 0x0071, 0xffff, "Lang2", LANG2),
+  // USB#070091 is used as Korean Hanja conversion key, and as the Eisu key on
+  // the Apple Japanese keyboard.
+  DOM_CODE(0x070091, 0x007b, 0x0083, 0x0071, 0x0066, "Lang2", LANG2),
   // LANG3
   // USB#070092 is used as Japanese Katakana key.
   DOM_CODE(0x070092, 0x005a, 0x0062, 0x0078, 0xffff, "Lang3", LANG3),
@@ -456,6 +484,9 @@ DOM_CODE_DECLARATION {
 
   // KEY_BRIGHTNESS* added in Linux 3.16
   // http://www.usb.org/developers/hidpage/HUTRR41.pdf
+  //
+  // Keyboard backlight/illumination spec update.
+  // https://www.usb.org/sites/default/files/hutrr73_-_fn_key_and_keyboard_backlight_brightness_0.pdf
   //            USB     evdev    XKB     Win     Mac   Code
   DOM_CODE(0x0c0060, 0x0166, 0x016e, 0x0000, 0xffff, NULL, INFO),
   DOM_CODE(0x0c0061, 0x0172, 0x017a, 0x0000, 0xffff, NULL, CLOSED_CAPTION_TOGGLE),
@@ -466,6 +497,8 @@ DOM_CODE_DECLARATION {
   DOM_CODE(0x0c0073, 0x0250, 0x0258, 0x0000, 0xffff, NULL, BRIGHTNESS_MINIMIUM),
   DOM_CODE(0x0c0074, 0x0251, 0x0259, 0x0000, 0xffff, NULL, BRIGHTNESS_MAXIMUM),
   DOM_CODE(0x0c0075, 0x00f4, 0x00fc, 0x0000, 0xffff, NULL, BRIGHTNESS_AUTO),
+  DOM_CODE(0x0c0079, 0x00e6, 0x00ee, 0x0000, 0xffff, NULL, KBD_ILLUM_UP),
+  DOM_CODE(0x0c007a, 0x00e5, 0x00ed, 0x0000, 0xffff, NULL, KBD_ILLUM_DOWN),
   DOM_CODE(0x0c0083, 0x0195, 0x019d, 0x0000, 0xffff, NULL, MEDIA_LAST),
   DOM_CODE(0x0c008c, 0x00a9, 0x00b1, 0x0000, 0xffff, NULL, LAUNCH_PHONE),
   DOM_CODE(0x0c008d, 0x016a, 0x0172, 0x0000, 0xffff, NULL, PROGRAM_GUIDE),
@@ -475,7 +508,7 @@ DOM_CODE_DECLARATION {
 
   //              USB     evdev    XKB     Win     Mac
   DOM_CODE(0x0c00b0, 0x00cf, 0x00d7, 0x0000, 0xffff, "MediaPlay", MEDIA_PLAY),
-  //DOM_CODE(0x0c00b1, 0x0077, 0x007f, 0x0000, 0xffff, "MediaPause", MEDIA_PAUSE),
+  DOM_CODE(0x0c00b1, 0x00c9, 0x00d1, 0x0000, 0xffff, "MediaPause", MEDIA_PAUSE),
   DOM_CODE(0x0c00b2, 0x00a7, 0x00af, 0x0000, 0xffff, "MediaRecord", MEDIA_RECORD),
   DOM_CODE(0x0c00b3, 0x00d0, 0x00d8, 0x0000, 0xffff, "MediaFastForward", MEDIA_FAST_FORWARD),
   DOM_CODE(0x0c00b4, 0x00a8, 0x00b0, 0x0000, 0xffff, "MediaRewind", MEDIA_REWIND),
@@ -519,7 +552,8 @@ DOM_CODE_DECLARATION {
   // USB#0x0c019e: AL Terminal Lock/Screensaver
   DOM_CODE(0x0c019e, 0x0098, 0x00a0, 0x0000, 0xffff, NULL, LOCK_SCREEN),
   // USB#0x0c019f AL Control Panel
-  DOM_CODE(0x0c019f, 0x0243, 0x024b, 0x0000, 0xffff, NULL, LAUNCH_CONTROL_PANEL),
+  DOM_CODE(0x0c019f, 0x0243, 0x024b, 0x0000, 0xffff, "LaunchControlPanel",
+             LAUNCH_CONTROL_PANEL),
   // USB#0x0c01a2: AL Select Task/Application
   DOM_CODE(0x0c01a2, 0x0244, 0x024c, 0x0000, 0xffff, "SelectTask", SELECT_TASK),
   // USB#0x0c01a7: AL_Documents
@@ -529,7 +563,9 @@ DOM_CODE_DECLARATION {
   DOM_CODE(0x0c01ae, 0x0176, 0x017e, 0x0000, 0xffff, NULL, LAUNCH_KEYBOARD_LAYOUT),
   DOM_CODE(0x0c01b1, 0x0245, 0x024d, 0x0000, 0xffff, "LaunchScreenSaver",
              LAUNCH_SCREEN_SAVER),  // AL Screen Saver
-  // USB#0c01b4: Home Directory (AL_FileBrowser) (Explorer)
+  DOM_CODE(0x0c01cb, 0x0247, 0x024f, 0x0000, 0xffff, "LaunchAssistant",
+             LAUNCH_ASSISTANT),  // AL Context-aware desktop assistant
+   // USB#0c01b4: Home Directory (AL_FileBrowser) (Explorer)
   //DOM_CODE(0x0c01b4, 0x0000, 0x0000, 0x0000, 0xffff, NULL, LAUNCH_FILE_BROWSER),
   // USB#0x0c01b7: AL Audio Browser
   DOM_CODE(0x0c01b7, 0x0188, 0x0190, 0x0000, 0xffff, NULL, LAUNCH_AUDIO_BROWSER),
@@ -564,8 +600,8 @@ DOM_CODE_DECLARATION {
   //DOM_CODE(0x0c0230, 0x0000, 0x0000, 0x0000, 0xffff, NULL, ZOOM_FULL),
   // USB#0x0c0231:  AC Normal View
   //DOM_CODE(0x0c0231, 0x0000, 0x0000, 0x0000, 0xffff, NULL, ZOOM_NORMAL),
-  // USB#0x0c0232:  AC View Toggle
-  DOM_CODE(0x0c0232, 0x0000, 0x0000, 0x0000, 0xffff, "ZoomToggle", ZOOM_TOGGLE),
+  DOM_CODE(0x0c0232, 0x0174, 0x017c, 0x0000, 0xffff, "ZoomToggle",
+             ZOOM_TOGGLE),  // AC View Toggle
   // USB#0x0c0279:  AC Redo/Repeat
   DOM_CODE(0x0c0279, 0x00b6, 0x00be, 0x0000, 0xffff, NULL, REDO),
   // USB#0x0c0289:  AC_Reply
@@ -574,4 +610,9 @@ DOM_CODE_DECLARATION {
   DOM_CODE(0x0c028b, 0x00e9, 0x00f1, 0x0000, 0xffff, "MailForward", MAIL_FORWARD),
   // USB#0x0c028c:  AC_Send
   DOM_CODE(0x0c028c, 0x00e7, 0x00ef, 0x0000, 0xffff, "MailSend", MAIL_SEND),
+  // USB#0x0c029d:  AC Next Keyboard Layout Select
+  DOM_CODE(0x0c029d, 0x0248, 0x0250, 0x0000, 0xffff, "KeyboardLayoutSelect",
+             KEYBOARD_LAYOUT_SELECT),
+  DOM_CODE(0x0c029f, 0x0078, 0x0080, 0x0000, 0xffff, "ShowAllWindows",
+             SHOW_ALL_WINDOWS),  // AC Desktop Show All Windows
 };
