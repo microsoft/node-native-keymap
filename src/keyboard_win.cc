@@ -354,11 +354,22 @@ namespace vscode_keyboard {
     return result;
   }
 
-  typedef struct {
-    napi_env env;
-    napi_async_context context;
-    napi_ref funcRef;
-  } NotificationCallbackData;
+  static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
+    // env may be NULL if nodejs is shutting down
+    if (env != NULL) {
+      napi_value global;
+      NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
+
+      std::vector<napi_value> argv;
+      NAPI_CALL_RETURN_VOID(env, napi_call_function(env, global, func, argv.size(), argv.data(), NULL));
+    }
+  }
+
+  static void FinalizeThreadsafeFunction(napi_env env, void* raw_data, void* hint) {
+    NotificationCallbackData *data;
+    napi_get_instance_data(env, (void**)&data);
+    data->tsfn = NULL;
+  }
 
   class TfInputListener : public ITfInputProcessorProfileActivationSink {
   private:
@@ -426,22 +437,15 @@ namespace vscode_keyboard {
       /* [in] */ __RPC__in REFGUID guidProfile,
       /* [in] */ HKL hkl,
       /* [in] */ DWORD dwFlags) override {
-      napi_handle_scope scope;
-      napi_env env = data->env;
-      napi_async_context context = data->context;
-      napi_ref funcRef = data->funcRef;
-      napi_open_handle_scope(env, &scope);
 
-      napi_value global;
-      NAPI_CALL_BASE(env, napi_get_global(env, &global), S_OK);
+      if (data->tsfn == NULL) {
+        // This indicates we are in the shutdown phase and the thread safe function has been finalized
+        return S_OK;
+      }
 
-      napi_value func;
-      NAPI_CALL_BASE(env, napi_get_reference_value(env, funcRef, &func), S_OK);
-
-      std::vector<napi_value> argv;
-      NAPI_CALL_BASE(env, napi_make_callback(env, context, global, func, argv.size(), argv.data(), NULL), S_OK);
-
-      napi_close_handle_scope(env, scope);
+      // No need to call napi_acquire_threadsafe_function because
+      // the refcount is set to 1 in the main thread.
+      napi_call_threadsafe_function(data->tsfn, NULL, napi_tsfn_blocking);
 
       return S_OK;
     }
@@ -477,6 +481,8 @@ namespace vscode_keyboard {
   napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
+    NotificationCallbackData *data;
+    NAPI_CALL(env, napi_get_instance_data(env, (void**)&data));
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
     NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
@@ -486,19 +492,15 @@ namespace vscode_keyboard {
     NAPI_ASSERT(env, valuetype0 == napi_function, "Wrong type of arguments. Expects a function as first argument.");
 
     napi_value func = args[0];
-    napi_ref funcRef;
-    NAPI_CALL(env, napi_create_reference(env, func, 1, &funcRef));
 
     napi_value resource_name;
     NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
 
-    napi_async_context context;
-    NAPI_CALL(env, napi_async_init(env, func, resource_name, &context));
+    // Convert the callback retrieved from JavaScript into a thread-safe function
+    NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL,
+                                                   FinalizeThreadsafeFunction, NULL, NotifyJS,
+                                                   &data->tsfn));
 
-    NotificationCallbackData *data = new NotificationCallbackData();
-    data->env = env;
-    data->context = context;
-    data->funcRef = funcRef;
 
     auto listener1 = new TfInputListener(data);
     listener1->StartListening();
