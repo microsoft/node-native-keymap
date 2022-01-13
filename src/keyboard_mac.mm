@@ -174,59 +174,12 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   return result;
 }
 
-static void NotifyJS(napi_env env, napi_value func, void* context, void* data) {
-  // env may be NULL if nodejs is shutting down
-  if (env != NULL) {
-    napi_value global;
-    NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
-
-    std::vector<napi_value> argv;
-    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, global, func, argv.size(), argv.data(), NULL));
-  }
-}
-
-static void FinalizeThreadsafeFunction(napi_env env, void* raw_data, void* hint) {
-  NotificationCallbackData *data;
-  napi_get_instance_data(env, (void**)&data);
-  data->tsfn = NULL;
-}
-
 void notificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
   NotificationCallbackData *data = (NotificationCallbackData *)observer;
-
-  if (data->tsfn == NULL) {
-    // This indicates we are in the shutdown phase and the thread safe function has been finalized
-    return;
-  }
-
-  // No need to call napi_acquire_threadsafe_function because
-  // the refcount is set to 1 in the main thread.
-  napi_call_threadsafe_function(data->tsfn, NULL, napi_tsfn_blocking);
+  invokeNotificationCallback(data);
 }
 
-napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
-  size_t argc = 2;
-  napi_value args[2];
-  NotificationCallbackData *data;
-  NAPI_CALL(env, napi_get_instance_data(env, (void**)&data));
-  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, NULL, NULL));
-
-  NAPI_ASSERT(env, argc == 1, "Wrong number of arguments. Expects a single argument.");
-
-  napi_valuetype valuetype0;
-  NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-  NAPI_ASSERT(env, valuetype0 == napi_function, "Wrong type of arguments. Expects a function as first argument.");
-
-  napi_value func = args[0];
-
-  napi_value resource_name;
-  NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
-
-  // Convert the callback retrieved from JavaScript into a thread-safe function
-  NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL,
-                                                 FinalizeThreadsafeFunction, NULL, NotifyJS,
-                                                 &data->tsfn));
-
+void registerKeyboardLayoutChangeListener(NotificationCallbackData *data) {
   CFNotificationCenterRef center = CFNotificationCenterGetDistributedCenter();
 
   // add an observer
@@ -234,8 +187,6 @@ napi_value _OnDidChangeKeyboardLayout(napi_env env, napi_callback_info info) {
     kTISNotifySelectedKeyboardInputSourceChanged, NULL,
     CFNotificationSuspensionBehaviorDeliverImmediately
   );
-
-  return napi_fetch_undefined(env);
 }
 
 napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
