@@ -261,17 +261,28 @@ const char* _VKeyToStr(int vkey) {
   return "VK_UNKNOWN";
 }
 
-void _EnsureForegroundKBLayout() {
-  DWORD dwThreadId = 0;
-  HWND hWnd = GetForegroundWindow();
-  if (hWnd != NULL) {
-    dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
+class UseForegroundKeyboardLayoutScope {
+ public:
+  UseForegroundKeyboardLayoutScope() : original_layout(GetKeyboardLayout(0)) {
+    if (auto window = GetForegroundWindow()) {
+      const auto thread_id = GetWindowThreadProcessId(window, nullptr);
+      ActivateKeyboardLayout(GetKeyboardLayout(thread_id), 0);
+    }
   }
-  ActivateKeyboardLayout(GetKeyboardLayout(dwThreadId), 0);
-}
+
+  ~UseForegroundKeyboardLayoutScope() {
+    ActivateKeyboardLayout(original_layout, 0);
+  }
+
+  UseForegroundKeyboardLayoutScope(const UseForegroundKeyboardLayoutScope&) = delete;
+  UseForegroundKeyboardLayoutScope& operator=(const UseForegroundKeyboardLayoutScope&) = delete;
+
+ private:
+  HKL original_layout = nullptr;
+};
 
 napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
-  _EnsureForegroundKBLayout();
+  UseForegroundKeyboardLayoutScope use_foreground_keyboard_layout;
 
   napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
@@ -334,7 +345,7 @@ std::string GetStringRegKey(std::string path, std::string name) {
 }
 
 napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
-  _EnsureForegroundKBLayout();
+  UseForegroundKeyboardLayoutScope use_foreground_keyboard_layout;
 
   char chr_layout_name[KL_NAMELENGTH];
   if (!GetKeyboardLayoutName(chr_layout_name)) {
