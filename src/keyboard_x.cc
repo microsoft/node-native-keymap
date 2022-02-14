@@ -347,18 +347,40 @@ void* ListenToXEvents(void *arg) {
 
   XkbEvent event;
   KbState current_state;
+  fd_set in_fds;
+  struct timeval tv;
+  int x11_fd = ConnectionNumber(display);
+
   while (true) {
-    XNextEvent(display, &event.core);
+    // See https://stackoverflow.com/a/8592969 which explains
+    // the technique of waiting for an XEvent with a timeout
 
-    if (event.type == xkb_base_event_code && event.any.xkb_type == XkbStateNotify) {
-      ReadKbState(display, &current_state);
-      // printf("current state: %d | %s | %s\n", current_state.effective_group_index, current_state.layout.c_str(), current_state.variant.c_str());
-      if (!KbStatesEqual(&last_state, &current_state)) {
-        last_state.effective_group_index = current_state.effective_group_index;
-        last_state.layout = current_state.layout;
-        last_state.variant = current_state.variant;
+    // Create a File Description Set containing x11_fd
+    FD_ZERO(&in_fds);
+    FD_SET(x11_fd, &in_fds);
 
-        InvokeNotificationCallback(data);
+    // Set the timer to 1s.
+    tv.tv_usec = 0;
+    tv.tv_sec = 1;
+
+    // Wait for X Event or the timer
+    select(x11_fd + 1, &in_fds, NULL, NULL, &tv);
+
+    // Handle pending XEvents
+    while (XPending(display)) {
+
+      XNextEvent(display, &event.core);
+
+      if (event.type == xkb_base_event_code && event.any.xkb_type == XkbStateNotify) {
+        ReadKbState(display, &current_state);
+        // printf("current state: %d | %s | %s\n", current_state.effective_group_index, current_state.layout.c_str(), current_state.variant.c_str());
+        if (!KbStatesEqual(&last_state, &current_state)) {
+          last_state.effective_group_index = current_state.effective_group_index;
+          last_state.layout = current_state.layout;
+          last_state.variant = current_state.variant;
+
+          InvokeNotificationCallback(data);
+        }
       }
     }
   }
