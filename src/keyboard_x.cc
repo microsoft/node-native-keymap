@@ -27,22 +27,22 @@ class KeyModifierMaskToXModifierMask {
   }
 
   void Initialize(Display* display) {
-    alt_modifier = 0;
-    meta_modifier = 0;
-    num_lock_modifier = 0;
-    mode_switch_modifier = 0;
-    level3_modifier = 0;  // AltGr is often mapped to the level3 modifier
-    level5_modifier = 0;  // AltGr is mapped to the level5 modifier in the Neo layout family
-    effective_group_index = 0;
+    alt_modifier_ = 0;
+    meta_modifier_ = 0;
+    num_lock_modifier_ = 0;
+    mode_switch_modifier_ = 0;
+    level3_modifier_ = 0;  // AltGr is often mapped to the level3 modifier
+    level5_modifier_ = 0;  // AltGr is mapped to the level5 modifier in the Neo layout family
+    effective_group_index_ = 0;
 
     if (!display) {
       return;
     }
 
     // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
-    XkbStateRec xkbState;
-    XkbGetState(display, XkbUseCoreKbd, &xkbState);
-    effective_group_index = xkbState.group;
+    XkbStateRec xkb_state;
+    XkbGetState(display, XkbUseCoreKbd, &xkb_state);
+    effective_group_index_ = xkb_state.group;
 
     XModifierKeymap* mod_map = XGetModifierMapping(display);
     int max_mod_keys = mod_map->max_keypermod;
@@ -59,22 +59,22 @@ class KeyModifierMaskToXModifierMask {
         }
 
         if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
-          alt_modifier = 1 << mod_index;
+          alt_modifier_ = 1 << mod_index;
         }
         if (keysym == XK_Mode_switch) {
-          mode_switch_modifier = 1 << mod_index;
+          mode_switch_modifier_ = 1 << mod_index;
         }
         if (keysym == XK_Meta_L || keysym == XK_Super_L || keysym == XK_Meta_R || keysym == XK_Super_R) {
-          meta_modifier = 1 << mod_index;
+          meta_modifier_ = 1 << mod_index;
         }
         if (keysym == XK_Num_Lock) {
-          num_lock_modifier = 1 << mod_index;
+          num_lock_modifier_ = 1 << mod_index;
         }
         if (keysym == XK_ISO_Level3_Shift) {
-          level3_modifier = 1 << mod_index;
+          level3_modifier_ = 1 << mod_index;
         }
         if (keysym == XK_ISO_Level5_Shift) {
-          level5_modifier = 1 << mod_index;
+          level5_modifier_ = 1 << mod_index;
         }
       }
     }
@@ -87,11 +87,11 @@ class KeyModifierMaskToXModifierMask {
 
     // Ctrl + Alt => AltGr
     if (keyMod & kControlKeyModifierMask && keyMod & kAltKeyModifierMask) {
-      x_modifier |= mode_switch_modifier;//alt_r_modifier;
+      x_modifier |= mode_switch_modifier_;//alt_r_modifier;
     } else if (keyMod & kControlKeyModifierMask) {
       x_modifier |= ControlMask;
     } else if (keyMod & kAltKeyModifierMask) {
-      x_modifier |= alt_modifier;
+      x_modifier |= alt_modifier_;
     }
 
     if (keyMod & kShiftKeyModifierMask) {
@@ -99,23 +99,23 @@ class KeyModifierMaskToXModifierMask {
     }
 
     if (keyMod & kMetaKeyModifierMask) {
-      x_modifier |= meta_modifier;
+      x_modifier |= meta_modifier_;
     }
 
     if (keyMod & kNumLockKeyModifierMask) {
-      x_modifier |= num_lock_modifier;
+      x_modifier |= num_lock_modifier_;
     }
 
     if (keyMod & kLevel3KeyModifierMask) {
-      x_modifier |= level3_modifier;
+      x_modifier |= level3_modifier_;
     }
 
     if (keyMod & kLevel5KeyModifierMask) {
-      x_modifier |= level5_modifier;
+      x_modifier |= level5_modifier_;
     }
 
     // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#xkb_state_to_core_protocol_state_transformation
-    x_modifier |= (effective_group_index << 13);
+    x_modifier |= (effective_group_index_ << 13);
 
     return x_modifier;
   }
@@ -125,13 +125,13 @@ class KeyModifierMaskToXModifierMask {
     Initialize(NULL);
   }
 
-  int alt_modifier;
-  int meta_modifier;
-  int num_lock_modifier;
-  int mode_switch_modifier;
-  int level3_modifier;
-  int level5_modifier;
-  int effective_group_index;
+  int alt_modifier_;
+  int meta_modifier_;
+  int num_lock_modifier_;
+  int mode_switch_modifier_;
+  int level3_modifier_;
+  int level5_modifier_;
+  int effective_group_index_;
 
   KeyModifierMaskToXModifierMask(const KeyModifierMaskToXModifierMask&) = delete;
   KeyModifierMaskToXModifierMask& operator=(const KeyModifierMaskToXModifierMask&) = delete;
@@ -162,7 +162,7 @@ namespace vscode_keyboard {
 #undef DOM_CODE
 #undef DOM_CODE_DECLARATION
 
-napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
+napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
 
   napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
@@ -203,34 +203,34 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
 
     {
       key_event->state = mask_provider->XStateFromKeyMod(kShiftKeyModifierMask);
-      std::string withShift = GetStrFromXEvent(&event);
-      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
+      std::string with_shift = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", with_shift.c_str()));
     }
 
     {
       key_event->state = mask_provider->XStateFromKeyMod(kLevel3KeyModifierMask);
-      std::string withAltGr = GetStrFromXEvent(&event);
-      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
+      std::string with_alt_gr = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", with_alt_gr.c_str()));
     }
 
     {
       key_event->state = mask_provider->XStateFromKeyMod(kShiftKeyModifierMask | kLevel3KeyModifierMask);
-      std::string withShiftAltGr = GetStrFromXEvent(&event);
-      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
+      std::string with_shift_alt_gr = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", with_shift_alt_gr.c_str()));
     }
 
     {
       // level 5 is important for the Neo layout family
       key_event->state = mask_provider->XStateFromKeyMod(kLevel5KeyModifierMask);
-      std::string withLevel5 = GetStrFromXEvent(&event);
-      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel5", withLevel5.c_str()));
+      std::string with_level5 = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel5", with_level5.c_str()));
     }
 
     {
       // level3 + level5 is Level 6 in terms of the Neo layout family. (Shift + level5 has no special meaning.)
       key_event->state = mask_provider->XStateFromKeyMod(kLevel3KeyModifierMask | kLevel5KeyModifierMask);
-      std::string withLevel3Level5 = GetStrFromXEvent(&event);
-      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel3Level5", withLevel3Level5.c_str()));
+      std::string with_level3_level5 = GetStrFromXEvent(&event);
+      NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withLevel3Level5", with_level3_level5.c_str()));
     }
 
     NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
@@ -242,7 +242,7 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
   return result;
 }
 
-napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
+napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
 
   napi_value result;
   NAPI_CALL(env, napi_get_null(env, &result));
@@ -253,9 +253,9 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
   }
 
   // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
-  XkbStateRec xkbState;
-  XkbGetState(display, XkbUseCoreKbd, &xkbState);
-  int effective_group_index = xkbState.group;
+  XkbStateRec xkb_state;
+  XkbGetState(display, XkbUseCoreKbd, &xkb_state);
+  int effective_group_index = xkb_state.group;
 
   XkbRF_VarDefsRec vdr;
   char *tmp = NULL;
@@ -282,7 +282,7 @@ typedef struct {
   std::string variant;
 } KbState;
 
-bool kbStatesEqual(KbState *a, KbState *b) {
+bool KbStatesEqual(KbState *a, KbState *b) {
   return (
     a->effective_group_index == b->effective_group_index
     && a->layout == b->layout
@@ -290,12 +290,12 @@ bool kbStatesEqual(KbState *a, KbState *b) {
   );
 }
 
-void readKbState(Display *display, KbState *dst) {
+void ReadKbState(Display *display, KbState *dst) {
   // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
   // Get effective group index
-  XkbStateRec xkbState;
-  XkbGetState(display, XkbUseCoreKbd, &xkbState);
-  dst->effective_group_index = xkbState.group;
+  XkbStateRec xkb_state;
+  XkbGetState(display, XkbUseCoreKbd, &xkb_state);
+  dst->effective_group_index = xkb_state.group;
 
   XkbRF_VarDefsRec vdr;
   char *tmp = NULL;
@@ -309,7 +309,7 @@ void readKbState(Display *display, KbState *dst) {
   }
 }
 
-void* listenToXEvents(void *arg) {
+void* ListenToXEvents(void *arg) {
   NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
 
   Display *display;
@@ -317,16 +317,16 @@ void* listenToXEvents(void *arg) {
     return NULL;
   }
 
-  int xkblibMajor = XkbMajorVersion;
-  int xkblibMinor = XkbMinorVersion;
-  if (!XkbLibraryVersion(&xkblibMajor, &xkblibMinor)) {
+  int xkblib_major = XkbMajorVersion;
+  int xkblib_minor = XkbMinorVersion;
+  if (!XkbLibraryVersion(&xkblib_major, &xkblib_minor)) {
     return NULL;
   }
 
   int opcode = 0;
-  int xkbBaseEventCode = 0;
-  int xkbBaseErrorCode = 0;
-  if (!XkbQueryExtension(display, &opcode, &xkbBaseEventCode, &xkbBaseErrorCode, &xkblibMajor, &xkblibMinor)) {
+  int xkb_base_event_code = 0;
+  int xkb_base_error_code = 0;
+  if (!XkbQueryExtension(display, &opcode, &xkb_base_event_code, &xkb_base_error_code, &xkblib_major, &xkblib_minor)) {
     return NULL;
   }
 
@@ -334,23 +334,23 @@ void* listenToXEvents(void *arg) {
   // Listen only to the `XkbStateNotify` event
   XkbSelectEvents(display, XkbUseCoreKbd, XkbAllEventsMask, XkbStateNotifyMask);
 
-  KbState lastState;
-  readKbState(display, &lastState);
+  KbState last_state;
+  ReadKbState(display, &last_state);
 
   XkbEvent event;
-  KbState currentState;
+  KbState current_state;
   while (true) {
     XNextEvent(display, &event.core);
 
-    if (event.type == xkbBaseEventCode && event.any.xkb_type == XkbStateNotify) {
-      readKbState(display, &currentState);
-      // printf("current state: %d | %s | %s\n", currentState.effective_group_index, currentState.layout.c_str(), currentState.variant.c_str());
-      if (!kbStatesEqual(&lastState, &currentState)) {
-        lastState.effective_group_index = currentState.effective_group_index;
-        lastState.layout = currentState.layout;
-        lastState.variant = currentState.variant;
+    if (event.type == xkb_base_event_code && event.any.xkb_type == XkbStateNotify) {
+      ReadKbState(display, &current_state);
+      // printf("current state: %d | %s | %s\n", current_state.effective_group_index, current_state.layout.c_str(), current_state.variant.c_str());
+      if (!KbStatesEqual(&last_state, &current_state)) {
+        last_state.effective_group_index = current_state.effective_group_index;
+        last_state.layout = current_state.layout;
+        last_state.variant = current_state.variant;
 
-        invokeNotificationCallback(data);
+        InvokeNotificationCallback(data);
       }
     }
   }
@@ -360,11 +360,11 @@ void* listenToXEvents(void *arg) {
   return NULL;
 }
 
-void registerKeyboardLayoutChangeListener(NotificationCallbackData *data) {
-  pthread_create(&data->tid, NULL, &listenToXEvents, data);
+void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+  pthread_create(&data->tid, NULL, &ListenToXEvents, data);
 }
 
-napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
+napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
   return napi_fetch_undefined(env);
 }
 

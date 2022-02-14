@@ -78,7 +78,7 @@ typedef struct {
   const char* str_vkey;
 } VKeyStrEntry;
 
-const char* _VKeyToStr(int vkey) {
+const char* VKeyToStr(int vkey) {
   switch (vkey) {
   case VK_LBUTTON: return "VK_LBUTTON"; // Left mouse button
   case VK_RBUTTON: return "VK_RBUTTON"; // Right mouse button
@@ -263,7 +263,7 @@ const char* _VKeyToStr(int vkey) {
 
 class UseForegroundKeyboardLayoutScope {
  public:
-  UseForegroundKeyboardLayoutScope() : original_layout(GetKeyboardLayout(0)) {
+  UseForegroundKeyboardLayoutScope() : original_layout_(GetKeyboardLayout(0)) {
     if (auto window = GetForegroundWindow()) {
       const auto thread_id = GetWindowThreadProcessId(window, nullptr);
       ActivateKeyboardLayout(GetKeyboardLayout(thread_id), 0);
@@ -271,17 +271,17 @@ class UseForegroundKeyboardLayoutScope {
   }
 
   ~UseForegroundKeyboardLayoutScope() {
-    ActivateKeyboardLayout(original_layout, 0);
+    ActivateKeyboardLayout(original_layout_, 0);
   }
 
   UseForegroundKeyboardLayoutScope(const UseForegroundKeyboardLayoutScope&) = delete;
   UseForegroundKeyboardLayoutScope& operator=(const UseForegroundKeyboardLayoutScope&) = delete;
 
  private:
-  HKL original_layout = nullptr;
+  HKL original_layout_ = nullptr;
 };
 
-napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
+napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
   UseForegroundKeyboardLayoutScope use_foreground_keyboard_layout;
 
   napi_value result;
@@ -305,19 +305,19 @@ napi_value _GetKeyMap(napi_env env, napi_callback_info info) {
     napi_value entry;
     NAPI_CALL(env, napi_create_object(env, &entry));
 
-    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "vkey", _VKeyToStr(native_keycode)));
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "vkey", VKeyToStr(native_keycode)));
 
     std::string value = GetStrFromKeyPress(native_keycode, 0, keyboard_state, clear_key_code, clear_scan_code);
     NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "value", value.c_str()));
 
-    std::string withShift = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", withShift.c_str()));
+    std::string with_shift = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShift", with_shift.c_str()));
 
-    std::string withAltGr = GetStrFromKeyPress(native_keycode, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", withAltGr.c_str()));
+    std::string with_alt_gr = GetStrFromKeyPress(native_keycode, kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withAltGr", with_alt_gr.c_str()));
 
-    std::string withShiftAltGr = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
-    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", withShiftAltGr.c_str()));
+    std::string with_shift_alt_gr = GetStrFromKeyPress(native_keycode, kShiftKeyModifierMask | kControlKeyModifierMask | kAltKeyModifierMask, keyboard_state, clear_key_code, clear_scan_code);
+    NAPI_CALL(env, napi_set_named_property_string_utf8(env, entry, "withShiftAltGr", with_shift_alt_gr.c_str()));
 
     NAPI_CALL(env, napi_set_named_property(env, result, code, entry));
   }
@@ -344,7 +344,7 @@ std::string GetStringRegKey(std::string path, std::string name) {
   return result;
 }
 
-napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
+napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
   UseForegroundKeyboardLayoutScope use_foreground_keyboard_layout;
 
   char chr_layout_name[KL_NAMELENGTH];
@@ -367,60 +367,60 @@ napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info) {
 
 class TfInputListener : public ITfInputProcessorProfileActivationSink {
 private:
-  NotificationCallbackData *data;
-  ULONG fRefCount;
-  ITfSource *pSource;
-  DWORD m_dwCookie;
+  NotificationCallbackData *data_;
+  ULONG ref_count_;
+  ITfSource *source_;
+  DWORD cookie_;
 
 public:
   explicit TfInputListener(NotificationCallbackData *data) {
-    this->data = data;
-    fRefCount = 1;
-    pSource = NULL;
-    m_dwCookie = TF_INVALID_COOKIE;
+    data_ = data;
+    ref_count_ = 1;
+    source_ = NULL;
+    cookie_ = TF_INVALID_COOKIE;
   }
 
   void StartListening() {
     HRESULT hr;
 
-    ITfThreadMgr* pThreadMgr;
-    hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&pThreadMgr);
+    ITfThreadMgr* thread_mgr;
+    hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&thread_mgr);
     if (!SUCCEEDED(hr)) {
       printf("native-keymap: Could not create ITfThreadMgr.\n");
       return;
     }
 
-    hr = pThreadMgr->QueryInterface(IID_ITfSource, (LPVOID*)&pSource);
+    hr = thread_mgr->QueryInterface(IID_ITfSource, (LPVOID*)&source_);
     if (!SUCCEEDED(hr)) {
       printf("native-keymap: Could not obtain ITfSource.\n");
-      pThreadMgr->Release();
+      thread_mgr->Release();
       return;
     }
 
-    hr = pSource->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
+    hr = source_->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
       static_cast<ITfInputProcessorProfileActivationSink*>(this),
-      &m_dwCookie);
+      &cookie_);
 
     if (!SUCCEEDED(hr)) {
       printf("native-keymap: Could not register ITfInputProcessorProfileActivationSink.\n");
     }
-    pThreadMgr->Release();
+    thread_mgr->Release();
   }
 
   void StopListening() {
-    if (pSource != NULL) {
-      if (m_dwCookie != TF_INVALID_COOKIE) {
-        pSource->UnadviseSink(m_dwCookie);
-        m_dwCookie = TF_INVALID_COOKIE;
+    if (source_ != NULL) {
+      if (cookie_ != TF_INVALID_COOKIE) {
+        source_->UnadviseSink(cookie_);
+        cookie_ = TF_INVALID_COOKIE;
       }
-      pSource->Release();
-      pSource = NULL;
+      source_->Release();
+      source_ = NULL;
     }
   }
 
   virtual ~TfInputListener() {
     this->StopListening();
-    delete this->data;
+    delete data_;
   }
 
   virtual HRESULT STDMETHODCALLTYPE OnActivated(
@@ -432,17 +432,17 @@ public:
     /* [in] */ HKL hkl,
     /* [in] */ DWORD dwFlags) override {
 
-    invokeNotificationCallback(data);
+    InvokeNotificationCallback(data_);
     return S_OK;
   }
 
   // IUnknown methods
   ULONG STDMETHODCALLTYPE AddRef() override {
-    return InterlockedIncrement(&fRefCount);
+    return InterlockedIncrement(&ref_count_);
   }
 
   ULONG STDMETHODCALLTYPE Release() override {
-    ULONG newCount = InterlockedDecrement(&fRefCount);
+    ULONG newCount = InterlockedDecrement(&ref_count_);
     if (0 == newCount) {
       delete this;
     }
@@ -464,13 +464,13 @@ void ReleaseListener(void* data) {
   reinterpret_cast<TfInputListener*>(data)->Release();
 }
 
-void registerKeyboardLayoutChangeListener(NotificationCallbackData *data) {
+void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
   auto listener1 = new TfInputListener(data);
   listener1->StartListening();
   node::AddEnvironmentCleanupHook(v8::Isolate::GetCurrent(), ReleaseListener, listener1);
 }
 
-napi_value _isISOKeyboard(napi_env env, napi_callback_info info) {
+napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
   return napi_fetch_undefined(env);
 }
 
