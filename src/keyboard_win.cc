@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <Msctf.h>
 #include <ime.h>
-#include <node.h>
 
 namespace {
 
@@ -420,7 +419,6 @@ public:
 
   virtual ~TfInputListener() {
     this->StopListening();
-    delete data_;
   }
 
   virtual HRESULT STDMETHODCALLTYPE OnActivated(
@@ -460,14 +458,13 @@ public:
   }
 };
 
-void ReleaseListener(void* data) {
-  reinterpret_cast<TfInputListener*>(data)->Release();
+void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+  data->listener = new TfInputListener(data);
+  data->listener->StartListening();
 }
 
-void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
-  auto listener1 = new TfInputListener(data);
-  listener1->StartListening();
-  node::AddEnvironmentCleanupHook(v8::Isolate::GetCurrent(), ReleaseListener, listener1);
+void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+  data->listener->Release();
 }
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {

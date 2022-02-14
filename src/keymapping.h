@@ -38,15 +38,19 @@ typedef struct {
 } KeycodeMapEntry;
 
 typedef struct {
+#if defined(_WIN32)
+  TfInputListener* listener;
+#endif
 #if defined(__unix__)
   pthread_t tid;
 #endif
-  napi_threadsafe_function tsfn;
+  volatile napi_threadsafe_function tsfn;
 } NotificationCallbackData;
 
 napi_value GetKeyMapImpl(napi_env env, napi_callback_info info);
 napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info);
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data);
+void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data);
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info);
 
 void InvokeNotificationCallback(NotificationCallbackData *data);
