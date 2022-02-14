@@ -174,7 +174,7 @@ napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
   return result;
 }
 
-void notificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+void NotificationCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
   NotificationCallbackData *data = (NotificationCallbackData *)observer;
   InvokeNotificationCallback(data);
 }
@@ -183,9 +183,18 @@ void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
   CFNotificationCenterRef center = CFNotificationCenterGetDistributedCenter();
 
   // add an observer
-  CFNotificationCenterAddObserver(center, data, notificationCallback,
+  CFNotificationCenterAddObserver(center, data, NotificationCallback,
     kTISNotifySelectedKeyboardInputSourceChanged, NULL,
     CFNotificationSuspensionBehaviorDeliverImmediately
+  );
+}
+
+void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+  CFNotificationCenterRef center = CFNotificationCenterGetDistributedCenter();
+
+  // remove the observer
+  CFNotificationCenterRemoveObserver(center, data,
+    kTISNotifySelectedKeyboardInputSourceChanged, NULL
   );
 }
 

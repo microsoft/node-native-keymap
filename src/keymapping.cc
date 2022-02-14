@@ -71,6 +71,11 @@ static void FinalizeThreadsafeFunction(napi_env env, void* raw_data, void* hint)
   data->tsfn = NULL;
 }
 
+static void EnvCleanupHook(void *raw_data) {
+  NotificationCallbackData* data = static_cast<NotificationCallbackData*>(raw_data);
+  DisposeKeyboardLayoutChangeListenerImpl(data);
+}
+
 napi_value OnDidChangeKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
   size_t argc = 2;
   napi_value args[2];
@@ -90,11 +95,15 @@ napi_value OnDidChangeKeyboardLayoutImpl(napi_env env, napi_callback_info info) 
   NAPI_CALL(env, napi_create_string_utf8(env, "onDidChangeKeyboardLayoutCallback", NAPI_AUTO_LENGTH, &resource_name));
 
   // Convert the callback retrieved from JavaScript into a thread-safe function
+  napi_threadsafe_function tsfn;
   NAPI_CALL(env, napi_create_threadsafe_function(env, func, NULL, resource_name, 0, 1, NULL,
                                                  FinalizeThreadsafeFunction, NULL, NotifyJS,
-                                                 &data->tsfn));
+                                                 &tsfn));
+  data->tsfn = tsfn;
 
   RegisterKeyboardLayoutChangeListenerImpl(data);
+
+  napi_add_env_cleanup_hook(env, EnvCleanupHook, data);
 
   return napi_fetch_undefined(env);
 }

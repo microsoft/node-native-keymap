@@ -309,6 +309,12 @@ void ReadKbState(Display *display, KbState *dst) {
   }
 }
 
+static void FlushAndCloseDisplay(void *arg) {
+  Display *display = static_cast<Display*>(arg);
+  XFlush(display);
+  XCloseDisplay(display);
+}
+
 void* ListenToXEvents(void *arg) {
   NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
 
@@ -316,6 +322,8 @@ void* ListenToXEvents(void *arg) {
   if (!(display = XOpenDisplay(""))) {
     return NULL;
   }
+
+  pthread_cleanup_push(FlushAndCloseDisplay, display);
 
   int xkblib_major = XkbMajorVersion;
   int xkblib_minor = XkbMinorVersion;
@@ -355,13 +363,19 @@ void* ListenToXEvents(void *arg) {
     }
   }
 
-  napi_release_threadsafe_function(data->tsfn, napi_tsfn_release);
+  pthread_cleanup_pop(1);
 
   return NULL;
 }
 
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
   pthread_create(&data->tid, NULL, &ListenToXEvents, data);
+}
+
+void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+  pthread_cancel(data->tid);
+  void *res;
+  pthread_join(data->tid, &res);
 }
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
