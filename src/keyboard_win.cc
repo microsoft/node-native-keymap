@@ -459,12 +459,14 @@ public:
 };
 
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
-  data->listener = new TfInputListener(data);
-  data->listener->StartListening();
+  TfInputListener* listener = new TfInputListener(data);
+  listener->StartListening();
+  data->listener = listener;
 }
 
 void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
-  data->listener->Release();
+  TfInputListener* listener = static_cast<TfInputListener*>(data->listener);
+  listener->Release();
 }
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {

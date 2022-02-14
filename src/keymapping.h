@@ -39,7 +39,7 @@ typedef struct {
 
 typedef struct {
 #if defined(_WIN32)
-  TfInputListener* listener;
+  void* listener;
 #endif
 #if defined(__unix__)
   pthread_t tid;
