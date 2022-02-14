@@ -16,8 +16,6 @@
 #include <pthread.h>
 #endif
 
-#define CHECK_OK(x) if (x != napi_ok) return NULL
-
 namespace vscode_keyboard {
 
 // This structure is used to define the keycode mapping table.
@@ -46,14 +44,14 @@ typedef struct {
   napi_threadsafe_function tsfn;
 } NotificationCallbackData;
 
-napi_value _GetKeyMap(napi_env env, napi_callback_info info);
-napi_value _GetCurrentKeyboardLayout(napi_env env, napi_callback_info info);
-void registerKeyboardLayoutChangeListener(NotificationCallbackData *data);
-napi_value _isISOKeyboard(napi_env env, napi_callback_info info);
+napi_value GetKeyMapImpl(napi_env env, napi_callback_info info);
+napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info);
+void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data);
+napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info);
 
-void invokeNotificationCallback(NotificationCallbackData *data);
-napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8Name, const char *value);
-napi_status napi_set_named_property_int32(napi_env env, napi_value object, const char *utf8Name, int value);
+void InvokeNotificationCallback(NotificationCallbackData *data);
+napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8_name, const char *value);
+napi_status napi_set_named_property_int32(napi_env env, napi_value object, const char *utf8_name, int value);
 napi_value napi_fetch_null(napi_env env);
 napi_value napi_fetch_undefined(napi_env env);
 napi_value napi_fetch_boolean(napi_env env, bool value);
