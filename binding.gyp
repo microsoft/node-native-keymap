@@ -8,7 +8,6 @@
       ],
       'msvs_settings': {
         'VCCLCompilerTool': {
-          'ExceptionHandling': 1,
           'AdditionalOptions': [
             '/Qspectre',
             '/guard:cf'
