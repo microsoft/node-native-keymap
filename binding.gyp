@@ -6,6 +6,19 @@
         "src/string_conversion.cc",
         "src/keymapping.cc"
       ],
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'AdditionalOptions': [
+            '/Qspectre',
+            '/guard:cf'
+          ]
+        },
+        'VCLinkerTool': {
+          'AdditionalOptions': [
+            '/guard:cf'
+          ]
+        }
+      },
       "conditions": [
         ['OS=="linux"', {
           "sources": [
