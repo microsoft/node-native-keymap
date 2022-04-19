@@ -352,7 +352,7 @@ napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
   }
   std::string layout_name = chr_layout_name;
 
-  // https://technet.microsoft.com/en-us/library/dd744319(v=ws.10).aspx
+  // https://docs.microsoft.com/windows-hardware/manufacture/desktop/windows-language-pack-default-values
   std::string layout_id = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Id");
   std::string layout_text = GetStringRegKey("System\\CurrentControlSet\\Control\\Keyboard Layouts\\" + layout_name, "Layout Text");
 
