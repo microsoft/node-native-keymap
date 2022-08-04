@@ -12,7 +12,12 @@ NativeBinding.prototype._init = function() {
     return;
   }
   this._tried = true;
-  this._keymapping = require('./build/Release/keymapping');
+  try {
+    this._keymapping = require('./build/Release/keymapping');
+  } catch (err) {
+    // fallback to the debug build
+    this._keymapping = require('./build/Debug/keymapping');
+  }
 };
 NativeBinding.prototype.getKeyMap = function() {
   try {
