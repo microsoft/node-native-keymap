@@ -10,7 +10,8 @@
         'VCCLCompilerTool': {
           'AdditionalOptions': [
             '/Qspectre',
-            '/guard:cf'
+            '/guard:cf',
+            '/std:c++17'
           ]
         },
         'VCLinkerTool': {
@@ -18,6 +19,9 @@
             '/guard:cf'
           ]
         }
+      },
+      "xcode_settings": {
+        'OTHER_CPLUSPLUSFLAGS': ['-std=c++17', '-stdlib=libc++'],
       },
       "conditions": [
         ['OS=="linux"', {
