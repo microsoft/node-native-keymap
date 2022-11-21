@@ -3,6 +3,5 @@
 /test/
 /.gitignore
 /.npmignore
-/azure-pipelines.yml
-/build-template.yml
 /npm-debug.log
+/pipeline.yml
