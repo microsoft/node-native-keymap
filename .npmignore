@@ -1,6 +1,9 @@
+/.github/
 /.vscode/
 /build/
 /test/
+/.git-blame-ignore
+/.gitattributes
 /.gitignore
 /.npmignore
 /npm-debug.log
