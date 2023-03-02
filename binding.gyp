@@ -6,10 +6,12 @@
         "src/string_conversion.cc",
         "src/keymapping.cc"
       ],
+      'msvs_configuration_attributes': {
+        'SpectreMitigation': 'Spectre'
+      },
       'msvs_settings': {
         'VCCLCompilerTool': {
           'AdditionalOptions': [
-            '/Qspectre',
             '/guard:cf',
             '/we4244',
             '/we4267',
