@@ -12,7 +12,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: main
+      ref: robo/setup_sysroot
       endpoint: Monaco
 
 parameters:
@@ -35,14 +35,15 @@ extends:
           - name: Linux
             nodeVersions:
               - 16.x
-          - name: MacOS
-            nodeVersions:
-              - 16.x
-          - name: Windows
-            nodeVersions:
-              - 16.x
 
         testSteps:
+          - script: |
+              echo $CC
+              echo $CXX
+              echo $LDFLAGS
+              echo $CXXFLAGS
+            displayName: Print compiler variables
+
           - script: npm ci
             displayName: Install dependencies
 
