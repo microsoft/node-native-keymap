@@ -34,7 +34,7 @@ extends:
         testPlatforms:
           - name: Linux
             nodeVersions:
-              - 16.x
+              - 18.x
 
         testSteps:
           - script: |
