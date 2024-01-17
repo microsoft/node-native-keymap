@@ -50,3 +50,5 @@ extends:
             displayName: Test
 
         publishPackage: ${{ parameters.publishPackage }}
+
+        policheckExclusionsFile: '$(Build.SourcesDirectory)/PoliCheckExclusions.xml'
