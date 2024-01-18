@@ -33,5 +33,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
+        # https://github.com/nodejs/node-gyp/issues/2869
+      - run: python3 -m pip install setuptools
       - run: npm ci
       - run: npm test
