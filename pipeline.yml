@@ -53,4 +53,4 @@ extends:
 
         publishPackage: ${{ parameters.publishPackage }}
 
-        policheckExclusionsFile: '$(Build.SourcesDirectory)/PoliCheckExclusions.xml'
+    policheckExclusionsFile: '$(Build.SourcesDirectory)/PoliCheckExclusions.xml'
