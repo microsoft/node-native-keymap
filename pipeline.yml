@@ -43,6 +43,8 @@ extends:
               - 16.x
 
         testSteps:
+          # https://github.com/nodejs/node-gyp/issues/2869
+          - script: python3 -m pip install setuptools
           - script: npm ci
             displayName: Install dependencies
 
@@ -50,3 +52,5 @@ extends:
             displayName: Test
 
         publishPackage: ${{ parameters.publishPackage }}
+
+    policheckExclusionsFile: '$(Build.SourcesDirectory)/PoliCheckExclusions.xml'
