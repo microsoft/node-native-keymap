@@ -34,13 +34,13 @@ extends:
         testPlatforms:
           - name: Linux
             nodeVersions:
-              - 16.x
+              - 18.17.x
           - name: MacOS
             nodeVersions:
-              - 16.x
+              - 18.17.x
           - name: Windows
             nodeVersions:
-              - 16.x
+              - 18.17.x
 
         testSteps:
           # https://github.com/nodejs/node-gyp/issues/2869
@@ -50,6 +50,9 @@ extends:
 
           - script: npm test
             displayName: Test
+
+        apiScanSoftwareName: 'vscode-native-keymap'
+        apiScanSoftwareVersion: '3.3'
 
         publishPackage: ${{ parameters.publishPackage }}
 
