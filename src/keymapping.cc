@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+#define NODE_API_EXPERIMENTAL_NOGC_ENV_OPT_OUT
 #include <node.h>
 #include <map>
 
