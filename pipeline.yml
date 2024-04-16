@@ -34,13 +34,13 @@ extends:
         testPlatforms:
           - name: Linux
             nodeVersions:
-              - 18.17.x
+              - 20.x
           - name: MacOS
             nodeVersions:
-              - 18.17.x
+              - 20.x
           - name: Windows
             nodeVersions:
-              - 18.17.x
+              - 20.x
 
         testSteps:
           # https://github.com/nodejs/node-gyp/issues/2869
