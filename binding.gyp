@@ -13,6 +13,7 @@
         'VCCLCompilerTool': {
           'AdditionalOptions': [
             '/guard:cf',
+            '/sdl',
             '/w34244',
             '/we4267',
             '/ZH:SHA_256'
