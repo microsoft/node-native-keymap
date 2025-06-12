@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: sudo apt install -y x11 xkbfile
+      - run: sudo apt install -y libx11-dev libxkbfile-dev
       - run: npm ci
       - run: npm test
 
