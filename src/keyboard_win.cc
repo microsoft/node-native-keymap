@@ -10,7 +10,7 @@
 
 #include "string_conversion.h"
 #include <windows.h>
-#include <Msctf.h>
+#include <msctf.h>
 #include <ime.h>
 
 namespace {
