@@ -2,15 +2,19 @@ name: CI
 
 on: [push, pull_request]
 
+permissions: {}
+
 jobs:
   windows:
     name: Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
         with:
-          node-version: 16
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - run: npm ci
       - run: npm test
 
@@ -18,10 +22,13 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
         with:
-          node-version: 16
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt install -y libx11-dev libxkbfile-dev
       - run: npm ci
       - run: npm test
 
@@ -29,11 +36,13 @@ jobs:
     name: macOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
         with:
-          node-version: 16
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
         # https://github.com/nodejs/node-gyp/issues/2869
-      - run: python3 -m pip install setuptools
+      - run: python3 -m venv .venv && source .venv/bin/activate && python3 -m pip install setuptools
       - run: npm ci
       - run: npm test
