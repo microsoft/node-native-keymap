@@ -15,6 +15,10 @@
 #include "../deps/chromium/macros.h"
 #include "../deps/chromium/x/keysym_to_unicode.h"
 
+#ifdef NATIVE_KEYMAP_WAYLAND
+#include "keyboard_wayland.h"
+#endif
+
 typedef struct _XDisplay XDisplay;
 
 namespace {
@@ -164,6 +168,16 @@ namespace vscode_keyboard {
 
 napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
 
+#ifdef NATIVE_KEYMAP_WAYLAND
+  {
+    bool handled = false;
+    napi_value wayland_result = GetKeyMapWayland(env, usb_keycode_map, sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]), &handled);
+    if (handled) {
+      return wayland_result;
+    }
+  }
+#endif
+
   napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
 
@@ -243,6 +257,16 @@ napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
 }
 
 napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
+
+#ifdef NATIVE_KEYMAP_WAYLAND
+  {
+    bool handled = false;
+    napi_value wayland_result = GetCurrentKeyboardLayoutWayland(env, &handled);
+    if (handled) {
+      return wayland_result;
+    }
+  }
+#endif
 
   napi_value result;
   NAPI_CALL(env, napi_get_null(env, &result));
@@ -390,8 +414,22 @@ void* ListenToXEvents(void *arg) {
   return NULL;
 }
 
+#ifdef NATIVE_KEYMAP_WAYLAND
+static void* ListenToKeyboardEvents(void *arg) {
+  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
+  if (ListenToWaylandEvents(data)) {
+    return NULL;
+  }
+  return ListenToXEvents(arg);
+}
+#endif
+
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
+#ifdef NATIVE_KEYMAP_WAYLAND
+  pthread_create(&data->tid, NULL, &ListenToKeyboardEvents, data);
+#else
   pthread_create(&data->tid, NULL, &ListenToXEvents, data);
+#endif
 }
 
 void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {

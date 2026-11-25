@@ -3,7 +3,7 @@ Returns what characters are produced by pressing keys with different modifiers o
 
 ## Installing
 
-* On Debian-based Linux: `sudo apt-get install libx11-dev libxkbfile-dev`
+* On Debian-based Linux: `sudo apt-get install libx11-dev libxkbfile-dev libwayland-dev libxkbcommon-dev`
 * On Red Hat-based Linux: `sudo yum install libx11-devel.x86_64 libxkbfile-devel.x86_64 # or .i686`
 * On SUSE-based Linux: `sudo zypper install libX11-devel libxkbfile-devel`
 * On FreeBSD: `sudo pkg install libX11 libxkbfile`
@@ -60,10 +60,18 @@ Example output when using German (Swiss) keyboard layout (on Windows):
 ```
 
 ## Supported OSes
- * linux (X11)
+ * linux (X11 and Wayland)
  * windows
  * mac
  * freebsd
+
+## Linux: X11 and Wayland
+On Linux the module reads the keyboard layout from the Wayland compositor when `WAYLAND_DISPLAY` is set and a compositor accepts the connection, and from the X server otherwise. The Wayland backend binds `wl_seat`, receives the XKB keymap the compositor sends with `wl_keyboard.keymap`, and resolves it with libxkbcommon, so it works on Wayland-only sessions and reports the layout the compositor actually uses, also when Electron runs as an XWayland client.
+
+ * Set `NATIVE_KEYMAP_BACKEND=x11` to always use the X server, or `NATIVE_KEYMAP_BACKEND=wayland` to never fall back to it.
+ * The Wayland backend is built when `pkg-config` finds `wayland-client` and `xkbcommon` (`sudo apt-get install libwayland-dev libxkbcommon-dev`); the module then needs `libwayland-client.so.0` and `libxkbcommon.so.0` at runtime. Build with `NATIVE_KEYMAP_WAYLAND=0` to leave it out.
+ * A Wayland client without a focused surface receives no `wl_keyboard.modifiers` events, so `getCurrentKeyboardLayout().group` is always `0` and switching between the layouts of one keymap (e.g. `us,ru`) fires no `onDidChangeKeyboardLayout` event. Changing the keymap itself does fire it.
+ * The layout names come from the keymap's `xkb_symbols` section; when the compositor doesn't name it, they are looked up by description in the XKB registry (`evdev.xml`). `model` and `options` come from `XKB_DEFAULT_MODEL` and `XKB_DEFAULT_OPTIONS`, as the keymap doesn't carry them.
 
 ## Known issues
  * only tested from the Electron Main process

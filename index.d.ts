@@ -18,6 +18,10 @@ export interface ILinuxKeyMapping {
 	withShift: string;
 	withAltGr: string;
 	withShiftAltGr: string;
+	/** The character produced with the ISO_Level5_Shift modifier (e.g. Neo's Mod4). */
+	withLevel5?: string;
+	/** The character produced with both the ISO_Level3_Shift and ISO_Level5_Shift modifiers. */
+	withLevel3Level5?: string;
 }
 export interface ILinuxKeyboardMapping {
 	[code: string]: ILinuxKeyMapping;
