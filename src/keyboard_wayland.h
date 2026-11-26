@@ -13,7 +13,9 @@ namespace vscode_keyboard {
 // The functions below read the keyboard layout from the Wayland compositor,
 // which is the only one that knows it in a Wayland session: XWayland's keymap
 // and group are only updated while an X11 window has keyboard focus, and its
-// _XKB_RULES_NAMES are never updated.
+// _XKB_RULES_NAMES are never updated. They load libwayland-client.so.0 and
+// libxkbcommon.so.0 the first time they need the compositor, and treat it as
+// absent when either can't be loaded.
 //
 // The default backend is chosen with the NATIVE_KEYMAP_BACKEND environment variable:
 //  - unset or `auto`: use the compositor when WAYLAND_DISPLAY is set and it

@@ -7,6 +7,7 @@
 #include "string_conversion.h"
 #include "common.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <stdio.h>
 #include <poll.h>
@@ -21,12 +22,332 @@
 #include <utility>
 #include <vector>
 
-#include <wayland-client.h>
-#include <xkbcommon/xkbcommon.h>
-
 #include "../deps/chromium/x/keysym_to_unicode.h"
 
 namespace {
+
+// libwayland-client and libxkbcommon are loaded at runtime rather than linked:
+// building needs neither, and the module loads, and reads the X server, where
+// they are missing. Below are the parts of their headers that this file uses;
+// the wl_* requests do what the code that wayland-scanner generates does.
+
+struct wl_display;
+struct wl_proxy;
+struct wl_registry;
+struct wl_seat;
+struct wl_keyboard;
+struct wl_callback;
+struct wl_surface;
+struct wl_array;
+struct xkb_context;
+struct xkb_keymap;
+struct xkb_state;
+
+// Only the name, the first member, is read here.
+struct wl_interface {
+  const char *name;
+};
+
+union wl_argument {
+  int32_t i;
+  uint32_t u;
+  int32_t f;
+  const char *s;
+  void *o;
+  uint32_t n;
+  void *a;
+  int32_t h;
+};
+
+struct wl_registry_listener {
+  void (*global)(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+  void (*global_remove)(void *data, struct wl_registry *registry, uint32_t name);
+};
+
+struct wl_seat_listener {
+  void (*capabilities)(void *data, struct wl_seat *seat, uint32_t capabilities);
+  void (*name)(void *data, struct wl_seat *seat, const char *name);
+};
+
+struct wl_keyboard_listener {
+  void (*keymap)(void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size);
+  void (*enter)(void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys);
+  void (*leave)(void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface);
+  void (*key)(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+  void (*modifiers)(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group);
+  void (*repeat_info)(void *data, struct wl_keyboard *keyboard, int32_t rate, int32_t delay);
+};
+
+struct wl_callback_listener {
+  void (*done)(void *data, struct wl_callback *callback, uint32_t callback_data);
+};
+
+// Request opcodes and enum values of the core protocol (wayland.xml).
+const uint32_t WL_DISPLAY_SYNC = 0;
+const uint32_t WL_DISPLAY_GET_REGISTRY = 1;
+const uint32_t WL_REGISTRY_BIND = 0;
+const uint32_t WL_SEAT_GET_KEYBOARD = 1;
+const uint32_t WL_SEAT_RELEASE = 3;
+const uint32_t WL_SEAT_RELEASE_SINCE_VERSION = 5;
+const uint32_t WL_SEAT_CAPABILITY_KEYBOARD = 2;
+const uint32_t WL_KEYBOARD_RELEASE = 0;
+const uint32_t WL_KEYBOARD_RELEASE_SINCE_VERSION = 3;
+const uint32_t WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1 = 1;
+const uint32_t WL_MARSHAL_FLAG_DESTROY = 1;
+
+typedef uint32_t xkb_keycode_t;
+typedef uint32_t xkb_keysym_t;
+typedef uint32_t xkb_layout_index_t;
+typedef uint32_t xkb_level_index_t;
+typedef uint32_t xkb_mod_index_t;
+typedef uint32_t xkb_mod_mask_t;
+
+enum xkb_context_flags : int {
+  XKB_CONTEXT_NO_FLAGS = 0,
+  XKB_CONTEXT_NO_DEFAULT_INCLUDES = 1,
+  XKB_CONTEXT_NO_ENVIRONMENT_NAMES = 2,
+};
+enum xkb_log_level : int {
+  XKB_LOG_LEVEL_CRITICAL = 10,
+};
+enum xkb_keymap_format : int {
+  XKB_KEYMAP_FORMAT_TEXT_V1 = 1,
+};
+enum xkb_keymap_compile_flags : int {
+  XKB_KEYMAP_COMPILE_NO_FLAGS = 0,
+};
+enum xkb_key_direction : int {
+  XKB_KEY_UP = 0,
+  XKB_KEY_DOWN = 1,
+};
+enum xkb_state_component : int {
+  XKB_STATE_MODS_DEPRESSED = 1,
+};
+
+const xkb_mod_index_t XKB_MOD_INVALID = 0xffffffff;
+const char XKB_MOD_NAME_SHIFT[] = "Shift";
+const xkb_keysym_t XKB_KEY_ISO_Level3_Shift = 0xfe03;
+const xkb_keysym_t XKB_KEY_ISO_Level5_Shift = 0xfe11;
+
+// The functions and interfaces of libwayland-client.so.0 that this file uses.
+struct wl_display *(*wl_display_connect)(const char *name);
+void (*wl_display_disconnect)(struct wl_display *display);
+int (*wl_display_get_fd)(struct wl_display *display);
+int (*wl_display_dispatch_pending)(struct wl_display *display);
+int (*wl_display_flush)(struct wl_display *display);
+int (*wl_display_prepare_read)(struct wl_display *display);
+int (*wl_display_read_events)(struct wl_display *display);
+void (*wl_display_cancel_read)(struct wl_display *display);
+void (*wl_proxy_destroy)(struct wl_proxy *proxy);
+uint32_t (*wl_proxy_get_version)(struct wl_proxy *proxy);
+int (*wl_proxy_add_listener)(struct wl_proxy *proxy, void (**implementation)(void), void *data);
+void (*wl_proxy_marshal_array)(struct wl_proxy *proxy, uint32_t opcode, union wl_argument *args);
+struct wl_proxy *(*wl_proxy_marshal_array_constructor_versioned)(struct wl_proxy *proxy, uint32_t opcode, union wl_argument *args, const struct wl_interface *interface, uint32_t version);
+// Only in libwayland-client 1.20 and later: the requests fall back to the two above without it.
+struct wl_proxy *(*wl_proxy_marshal_array_flags)(struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interface, uint32_t version, uint32_t flags, union wl_argument *args);
+const struct wl_interface *wl_callback_interface;
+const struct wl_interface *wl_registry_interface;
+const struct wl_interface *wl_seat_interface;
+const struct wl_interface *wl_keyboard_interface;
+
+// The functions of libxkbcommon.so.0 that this file uses.
+struct xkb_context *(*xkb_context_new)(enum xkb_context_flags flags);
+void (*xkb_context_set_log_level)(struct xkb_context *context, enum xkb_log_level level);
+void (*xkb_context_unref)(struct xkb_context *context);
+struct xkb_keymap *(*xkb_keymap_new_from_string)(struct xkb_context *context, const char *string, enum xkb_keymap_format format, enum xkb_keymap_compile_flags flags);
+void (*xkb_keymap_unref)(struct xkb_keymap *keymap);
+xkb_keycode_t (*xkb_keymap_min_keycode)(struct xkb_keymap *keymap);
+xkb_keycode_t (*xkb_keymap_max_keycode)(struct xkb_keymap *keymap);
+xkb_layout_index_t (*xkb_keymap_num_layouts)(struct xkb_keymap *keymap);
+xkb_layout_index_t (*xkb_keymap_num_layouts_for_key)(struct xkb_keymap *keymap, xkb_keycode_t key);
+const char *(*xkb_keymap_layout_get_name)(struct xkb_keymap *keymap, xkb_layout_index_t index);
+int (*xkb_keymap_key_get_syms_by_level)(struct xkb_keymap *keymap, xkb_keycode_t key, xkb_layout_index_t layout, xkb_level_index_t level, const xkb_keysym_t **syms_out);
+xkb_mod_index_t (*xkb_keymap_mod_get_index)(struct xkb_keymap *keymap, const char *name);
+struct xkb_state *(*xkb_state_new)(struct xkb_keymap *keymap);
+void (*xkb_state_unref)(struct xkb_state *state);
+enum xkb_state_component (*xkb_state_update_key)(struct xkb_state *state, xkb_keycode_t key, enum xkb_key_direction direction);
+enum xkb_state_component (*xkb_state_update_mask)(struct xkb_state *state, xkb_mod_mask_t depressed_mods, xkb_mod_mask_t latched_mods, xkb_mod_mask_t locked_mods, xkb_layout_index_t depressed_layout, xkb_layout_index_t latched_layout, xkb_layout_index_t locked_layout);
+xkb_mod_mask_t (*xkb_state_serialize_mods)(struct xkb_state *state, enum xkb_state_component components);
+xkb_keysym_t (*xkb_state_key_get_one_sym)(struct xkb_state *state, xkb_keycode_t key);
+
+template<typename T>
+bool LoadSymbol(void *library, const char *name, T *symbol) {
+  void *address = dlsym(library, name);
+  memcpy(symbol, &address, sizeof(address));
+  return address != nullptr;
+}
+
+#define LOAD_SYMBOL(library, name) LoadSymbol(library, #name, &name)
+
+bool LoadLibraries() {
+  void *wayland = dlopen("libwayland-client.so.0", RTLD_NOW | RTLD_LOCAL);
+  if (!wayland) {
+    return false;
+  }
+  void *xkbcommon = dlopen("libxkbcommon.so.0", RTLD_NOW | RTLD_LOCAL);
+  if (!xkbcommon) {
+    dlclose(wayland);
+    return false;
+  }
+  bool loaded = LOAD_SYMBOL(wayland, wl_display_connect)
+    && LOAD_SYMBOL(wayland, wl_display_disconnect)
+    && LOAD_SYMBOL(wayland, wl_display_get_fd)
+    && LOAD_SYMBOL(wayland, wl_display_dispatch_pending)
+    && LOAD_SYMBOL(wayland, wl_display_flush)
+    && LOAD_SYMBOL(wayland, wl_display_prepare_read)
+    && LOAD_SYMBOL(wayland, wl_display_read_events)
+    && LOAD_SYMBOL(wayland, wl_display_cancel_read)
+    && LOAD_SYMBOL(wayland, wl_proxy_destroy)
+    && LOAD_SYMBOL(wayland, wl_proxy_get_version)
+    && LOAD_SYMBOL(wayland, wl_proxy_add_listener)
+    && LOAD_SYMBOL(wayland, wl_proxy_marshal_array)
+    && LOAD_SYMBOL(wayland, wl_proxy_marshal_array_constructor_versioned)
+    && LoadSymbol(wayland, "wl_callback_interface", &wl_callback_interface)
+    && LoadSymbol(wayland, "wl_registry_interface", &wl_registry_interface)
+    && LoadSymbol(wayland, "wl_seat_interface", &wl_seat_interface)
+    && LoadSymbol(wayland, "wl_keyboard_interface", &wl_keyboard_interface)
+    && LOAD_SYMBOL(xkbcommon, xkb_context_new)
+    && LOAD_SYMBOL(xkbcommon, xkb_context_set_log_level)
+    && LOAD_SYMBOL(xkbcommon, xkb_context_unref)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_new_from_string)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_unref)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_min_keycode)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_max_keycode)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_num_layouts)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_num_layouts_for_key)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_layout_get_name)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_key_get_syms_by_level)
+    && LOAD_SYMBOL(xkbcommon, xkb_keymap_mod_get_index)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_new)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_unref)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_update_key)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_update_mask)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_serialize_mods)
+    && LOAD_SYMBOL(xkbcommon, xkb_state_key_get_one_sym);
+  if (!loaded) {
+    dlclose(xkbcommon);
+    dlclose(wayland);
+    return false;
+  }
+  LOAD_SYMBOL(wayland, wl_proxy_marshal_array_flags);
+  // The libraries stay loaded: the listener thread may use them until the process exits.
+  return true;
+}
+
+#undef LOAD_SYMBOL
+
+pthread_once_t libraries_once = PTHREAD_ONCE_INIT;
+bool libraries_loaded = false;
+
+void LoadLibrariesOnce() {
+  libraries_loaded = LoadLibraries();
+}
+
+// Whether libwayland-client and libxkbcommon are loaded: the first call loads
+// them. Nothing below may call into them before this returned true.
+bool IsLoaded() {
+  pthread_once(&libraries_once, LoadLibrariesOnce);
+  return libraries_loaded;
+}
+
+template<typename T>
+struct wl_proxy *Proxy(T *object) {
+  return reinterpret_cast<struct wl_proxy*>(object);
+}
+
+struct wl_proxy *MarshalConstructor(struct wl_proxy *proxy, uint32_t opcode, union wl_argument *args, const struct wl_interface *interface, uint32_t version) {
+  if (wl_proxy_marshal_array_flags) {
+    return wl_proxy_marshal_array_flags(proxy, opcode, interface, version, 0, args);
+  }
+  return wl_proxy_marshal_array_constructor_versioned(proxy, opcode, args, interface, version);
+}
+
+void MarshalDestructor(struct wl_proxy *proxy, uint32_t opcode) {
+  union wl_argument args[1];
+  args[0].o = nullptr;
+  if (wl_proxy_marshal_array_flags) {
+    wl_proxy_marshal_array_flags(proxy, opcode, nullptr, wl_proxy_get_version(proxy), WL_MARSHAL_FLAG_DESTROY, args);
+    return;
+  }
+  wl_proxy_marshal_array(proxy, opcode, args);
+  wl_proxy_destroy(proxy);
+}
+
+template<typename T, typename L>
+int AddListener(T *object, const L *listener, void *data) {
+  return wl_proxy_add_listener(Proxy(object), reinterpret_cast<void (**)(void)>(const_cast<L*>(listener)), data);
+}
+
+struct wl_callback *wl_display_sync(struct wl_display *display) {
+  union wl_argument args[1];
+  args[0].o = nullptr;
+  return reinterpret_cast<struct wl_callback*>(MarshalConstructor(Proxy(display), WL_DISPLAY_SYNC, args, wl_callback_interface, wl_proxy_get_version(Proxy(display))));
+}
+
+struct wl_registry *wl_display_get_registry(struct wl_display *display) {
+  union wl_argument args[1];
+  args[0].o = nullptr;
+  return reinterpret_cast<struct wl_registry*>(MarshalConstructor(Proxy(display), WL_DISPLAY_GET_REGISTRY, args, wl_registry_interface, wl_proxy_get_version(Proxy(display))));
+}
+
+void *wl_registry_bind(struct wl_registry *registry, uint32_t name, const struct wl_interface *interface, uint32_t version) {
+  union wl_argument args[4];
+  args[0].u = name;
+  args[1].s = interface->name;
+  args[2].u = version;
+  args[3].o = nullptr;
+  return MarshalConstructor(Proxy(registry), WL_REGISTRY_BIND, args, interface, version);
+}
+
+void wl_registry_destroy(struct wl_registry *registry) {
+  wl_proxy_destroy(Proxy(registry));
+}
+
+int wl_registry_add_listener(struct wl_registry *registry, const struct wl_registry_listener *listener, void *data) {
+  return AddListener(registry, listener, data);
+}
+
+struct wl_keyboard *wl_seat_get_keyboard(struct wl_seat *seat) {
+  union wl_argument args[1];
+  args[0].o = nullptr;
+  return reinterpret_cast<struct wl_keyboard*>(MarshalConstructor(Proxy(seat), WL_SEAT_GET_KEYBOARD, args, wl_keyboard_interface, wl_proxy_get_version(Proxy(seat))));
+}
+
+void wl_seat_release(struct wl_seat *seat) {
+  MarshalDestructor(Proxy(seat), WL_SEAT_RELEASE);
+}
+
+void wl_seat_destroy(struct wl_seat *seat) {
+  wl_proxy_destroy(Proxy(seat));
+}
+
+int wl_seat_add_listener(struct wl_seat *seat, const struct wl_seat_listener *listener, void *data) {
+  return AddListener(seat, listener, data);
+}
+
+uint32_t wl_keyboard_get_version(struct wl_keyboard *keyboard) {
+  return wl_proxy_get_version(Proxy(keyboard));
+}
+
+void wl_keyboard_release(struct wl_keyboard *keyboard) {
+  MarshalDestructor(Proxy(keyboard), WL_KEYBOARD_RELEASE);
+}
+
+void wl_keyboard_destroy(struct wl_keyboard *keyboard) {
+  wl_proxy_destroy(Proxy(keyboard));
+}
+
+int wl_keyboard_add_listener(struct wl_keyboard *keyboard, const struct wl_keyboard_listener *listener, void *data) {
+  return AddListener(keyboard, listener, data);
+}
+
+void wl_callback_destroy(struct wl_callback *callback) {
+  wl_proxy_destroy(Proxy(callback));
+}
+
+int wl_callback_add_listener(struct wl_callback *callback, const struct wl_callback_listener *listener, void *data) {
+  return AddListener(callback, listener, data);
+}
 
 // How long to wait for the compositor to answer a roundtrip.
 const int kRoundtripTimeoutMs = 500;
@@ -153,7 +474,7 @@ const struct wl_seat_listener kSeatListener = {
 void BindSeat(WaylandState *state, struct wl_registry *registry, uint32_t name, uint32_t version) {
   state->seat_name = name;
   state->seat_version = version < kMaxSeatVersion ? version : kMaxSeatVersion;
-  state->seat = static_cast<struct wl_seat*>(wl_registry_bind(registry, name, &wl_seat_interface, state->seat_version));
+  state->seat = static_cast<struct wl_seat*>(wl_registry_bind(registry, name, wl_seat_interface, state->seat_version));
   wl_seat_add_listener(state->seat, &kSeatListener, state);
 }
 
@@ -173,7 +494,7 @@ void ReleaseSeat(WaylandState *state) {
 
 void RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
   WaylandState *state = static_cast<WaylandState*>(data);
-  if (strcmp(interface, wl_seat_interface.name) != 0) {
+  if (strcmp(interface, wl_seat_interface->name) != 0) {
     return;
   }
   state->seats.push_back(std::make_pair(name, version));
@@ -316,6 +637,9 @@ bool Connect(WaylandState *state) {
   // WAYLAND_SOCKET is an already connected socket that libwayland takes over
   // (and closes): it belongs to whoever it was passed to, not to us.
   if (getenv("WAYLAND_SOCKET")) {
+    return false;
+  }
+  if (!IsLoaded()) {
     return false;
   }
   state->display = wl_display_connect(NULL);
@@ -793,7 +1117,7 @@ void ListenToWaylandEvents(NotificationCallbackData *data) {
   // cancellation while waiting (see DispatchOnce).
   int old_state;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
-  if (GetBackend() == Backend::X11) {
+  if (GetBackend() == Backend::X11 || !IsLoaded()) {
     pthread_setcancelstate(old_state, NULL);
     return;
   }

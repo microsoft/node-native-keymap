@@ -53,7 +53,7 @@ export type KeyboardBackend = 'x11' | 'wayland';
 export interface IKeyboardBackends {
 	/** Whether an X server can be reached, also XWayland. */
 	x11: boolean;
-	/** Whether the Wayland compositor provides a keymap: `false` when the module is built without the Wayland backend. */
+	/** Whether the Wayland compositor provides a keymap: `false` when the module is built without the Wayland backend, or when libwayland-client or libxkbcommon can't be loaded. */
 	wayland: boolean;
 	/** The backend the getters read without a backend argument. */
 	default: KeyboardBackend;
