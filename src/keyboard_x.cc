@@ -160,7 +160,6 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
-#ifdef NATIVE_KEYMAP_WAYLAND
 bool IsXServerAvailable() {
   Display *display = XOpenDisplay("");
   if (!display) {
@@ -169,7 +168,42 @@ bool IsXServerAvailable() {
   XCloseDisplay(display);
   return true;
 }
-#endif
+
+// The backend a getter was asked for: none (the default), the X server or the
+// compositor. Throws a TypeError and returns false for anything else.
+enum class RequestedBackend { Default, X11, Wayland };
+
+static bool GetRequestedBackend(napi_env env, napi_callback_info info, RequestedBackend *backend) {
+  *backend = RequestedBackend::Default;
+  size_t argc = 1;
+  napi_value argv[1];
+  NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL), false);
+  if (argc < 1) {
+    return true;
+  }
+  napi_valuetype type;
+  NAPI_CALL_BASE(env, napi_typeof(env, argv[0], &type), false);
+  if (type == napi_undefined) {
+    return true;
+  }
+  if (type == napi_string) {
+    // Long enough to tell longer strings from the names, which it truncates.
+    char value[16];
+    size_t length = 0;
+    NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, argv[0], value, sizeof(value), &length), false);
+    std::string name(value, length);
+    if (name == "x11") {
+      *backend = RequestedBackend::X11;
+      return true;
+    }
+    if (name == "wayland") {
+      *backend = RequestedBackend::Wayland;
+      return true;
+    }
+  }
+  napi_throw_type_error(env, NULL, "The keyboard backend must be 'x11', 'wayland' or undefined.");
+  return false;
+}
 
 #define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
 #define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
@@ -178,18 +212,29 @@ bool IsXServerAvailable() {
 #undef DOM_CODE_DECLARATION
 
 napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
+  RequestedBackend backend;
+  if (!GetRequestedBackend(env, info, &backend)) {
+    return NULL;
+  }
+
+  napi_value result;
 
 #ifdef NATIVE_KEYMAP_WAYLAND
-  {
+  if (backend != RequestedBackend::X11) {
     bool handled = false;
-    napi_value wayland_result = GetKeyMapWayland(env, usb_keycode_map, sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]), &handled);
+    napi_value wayland_result = GetKeyMapWayland(env, usb_keycode_map, sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]), backend == RequestedBackend::Wayland, &handled);
     if (handled) {
       return wayland_result;
     }
   }
+#else
+  if (backend == RequestedBackend::Wayland) {
+    // Built without the Wayland backend.
+    NAPI_CALL(env, napi_create_object(env, &result));
+    return result;
+  }
 #endif
 
-  napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
 
   Display *display;
@@ -268,18 +313,29 @@ napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
 }
 
 napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
+  RequestedBackend backend;
+  if (!GetRequestedBackend(env, info, &backend)) {
+    return NULL;
+  }
+
+  napi_value result;
 
 #ifdef NATIVE_KEYMAP_WAYLAND
-  {
+  if (backend != RequestedBackend::X11) {
     bool handled = false;
-    napi_value wayland_result = GetCurrentKeyboardLayoutWayland(env, &handled);
+    napi_value wayland_result = GetCurrentKeyboardLayoutWayland(env, backend == RequestedBackend::Wayland, &handled);
     if (handled) {
       return wayland_result;
     }
   }
+#else
+  if (backend == RequestedBackend::Wayland) {
+    // Built without the Wayland backend.
+    NAPI_CALL(env, napi_get_null(env, &result));
+    return result;
+  }
 #endif
 
-  napi_value result;
   NAPI_CALL(env, napi_get_null(env, &result));
 
   Display *display;
@@ -467,6 +523,21 @@ void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
   return napi_fetch_undefined(env);
+}
+
+napi_value GetKeyboardBackendsImpl(napi_env env, napi_callback_info info) {
+  bool wayland = false;
+  bool wayland_is_default = false;
+#ifdef NATIVE_KEYMAP_WAYLAND
+  GetWaylandStatus(&wayland, &wayland_is_default);
+#endif
+
+  napi_value result;
+  NAPI_CALL(env, napi_create_object(env, &result));
+  NAPI_CALL(env, napi_set_named_property(env, result, "x11", napi_fetch_boolean(env, IsXServerAvailable())));
+  NAPI_CALL(env, napi_set_named_property(env, result, "wayland", napi_fetch_boolean(env, wayland)));
+  NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "default", wayland_is_default ? "wayland" : "x11"));
+  return result;
 }
 
 } // namespace vscode_keyboard

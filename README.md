@@ -68,11 +68,26 @@ Example output when using German (Swiss) keyboard layout (on Windows):
 ## Linux: X11 and Wayland
 On Linux the module reads the keyboard layout from the Wayland compositor when `WAYLAND_DISPLAY` is set and a compositor accepts the connection, and from the X server otherwise. The Wayland backend binds `wl_seat`, receives the XKB keymap the compositor sends with `wl_keyboard.keymap`, and resolves it with libxkbcommon, so it works on Wayland-only sessions and reports the layout the compositor actually uses, also when Electron runs as an XWayland client. A Wayland client without a focused surface doesn't learn which layout of the keymap is active, so a keymap with several layouts (e.g. `us,ru`) is read from the X server when one can be reached: Electron apps such as VS Code run under XWayland unless they are started with `--ozone-platform=wayland`, and XWayland tracks the active layout while one of their windows is focused. `onDidChangeKeyboardLayout` listens to both.
 
- * Set `NATIVE_KEYMAP_BACKEND=x11` to always use the X server, or `NATIVE_KEYMAP_BACKEND=wayland` to never fall back to it.
+ * Set `NATIVE_KEYMAP_BACKEND=x11` to always use the X server by default, or `NATIVE_KEYMAP_BACKEND=wayland` to never fall back to it.
  * The Wayland backend is built when `pkg-config` finds `wayland-client` and `xkbcommon` (`sudo apt-get install libwayland-dev libxkbcommon-dev`); the module then needs `libwayland-client.so.0` and `libxkbcommon.so.0` at runtime. Build with `NATIVE_KEYMAP_WAYLAND=0` to leave it out, or with `NATIVE_KEYMAP_WAYLAND=1` to fail when the libraries are missing.
  * With `NATIVE_KEYMAP_BACKEND=wayland`, or without an X server, the active layout of a keymap with several layouts is unknown: `getCurrentKeyboardLayout().group` is always `0` and switching between its layouts fires no `onDidChangeKeyboardLayout` event. Changing the keymap itself does fire it.
  * When the connection to the compositor is lost, `onDidChangeKeyboardLayout` fires and the module reads the X server until it connects again; it tries every second and fires again once connected.
  * The layout names come from the keymap's `xkb_symbols` section; when the compositor doesn't name it, they are looked up by description in the XKB registry (`evdev.xml`). `model` and `options` come from `XKB_DEFAULT_MODEL` and `XKB_DEFAULT_OPTIONS`, as the keymap doesn't carry them.
+
+### Choosing the backend at runtime
+`getKeyMap` and `getCurrentKeyboardLayout` take an optional backend, `'x11'` or `'wayland'`, to read that one instead of the default: `'wayland'` reads the compositor even when the default is the X server, and never falls back to the X server. A backend that can't be read gives `{}` and `null`, and so does `'wayland'` when the module is built without it. `getKeyboardBackends()` tells which backends can be read and which one is the default, so an application can read both and decide, for example by the platform its windows use. It returns `undefined` on Windows and macOS, which ignore the backend argument.
+
+```js
+const keymap = require('native-keymap');
+
+const backends = keymap.getKeyboardBackends(); // e.g. { x11: true, wayland: true, default: 'wayland' }
+if (backends && backends.x11 && backends.wayland) {
+  const fromCompositor = keymap.getCurrentKeyboardLayout('wayland');
+  const fromXServer = keymap.getCurrentKeyboardLayout('x11');
+}
+```
+
+`onDidChangeKeyboardLayout` follows the backends the default reads: with `NATIVE_KEYMAP_BACKEND=x11`, or without `WAYLAND_DISPLAY`, it doesn't listen to the compositor, and with `NATIVE_KEYMAP_BACKEND=wayland` it doesn't listen to the X server.
 
 ## Known issues
  * only tested from the Electron Main process

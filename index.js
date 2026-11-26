@@ -3,6 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// The Linux backend a getter reads: undefined for the default.
+function checkBackend(backend) {
+  if (backend !== undefined && backend !== 'x11' && backend !== 'wayland') {
+    throw new TypeError('The keyboard backend must be \'x11\', \'wayland\' or undefined.');
+  }
+}
+
 function NativeBinding() {
   this._tried = false;
   this._keymapping = null;
@@ -19,19 +26,21 @@ NativeBinding.prototype._init = function() {
     this._keymapping = require('./build/Debug/keymapping');
   }
 };
-NativeBinding.prototype.getKeyMap = function() {
+NativeBinding.prototype.getKeyMap = function(backend) {
+  checkBackend(backend);
   try {
     this._init();
-    return this._keymapping.getKeyMap();
+    return this._keymapping.getKeyMap(backend);
   } catch(err) {
     console.error(err);
     return [];
   }
 };
-NativeBinding.prototype.getCurrentKeyboardLayout = function() {
+NativeBinding.prototype.getCurrentKeyboardLayout = function(backend) {
+  checkBackend(backend);
   try {
     this._init();
-    return this._keymapping.getCurrentKeyboardLayout();
+    return this._keymapping.getCurrentKeyboardLayout(backend);
   } catch(err) {
     console.error(err);
     return null;
@@ -53,18 +62,30 @@ NativeBinding.prototype.isISOKeyboard = function(callback) {
     return false;
   }
 }
+NativeBinding.prototype.getKeyboardBackends = function() {
+  try {
+    this._init();
+    return this._keymapping.getKeyboardBackends();
+  } catch(err) {
+    console.error(err);
+    return undefined;
+  }
+}
 
 var binding = new NativeBinding();
 
-exports.getCurrentKeyboardLayout = function() {
-  return binding.getCurrentKeyboardLayout();
+exports.getCurrentKeyboardLayout = function(backend) {
+  return binding.getCurrentKeyboardLayout(backend);
 };
-exports.getKeyMap = function() {
-  return binding.getKeyMap();
+exports.getKeyMap = function(backend) {
+  return binding.getKeyMap(backend);
 };
 exports.onDidChangeKeyboardLayout = function(callback) {
   return binding.onDidChangeKeyboardLayout(callback);
 };
 exports.isISOKeyboard = function(callback) {
   return binding.isISOKeyboard(callback);
+};
+exports.getKeyboardBackends = function() {
+  return binding.getKeyboardBackends();
 };

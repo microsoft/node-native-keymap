@@ -138,6 +138,11 @@ napi_value Init(napi_env env, napi_value exports) {
     NAPI_CALL(env, napi_create_function(env, NULL, 0, IsISOKeyboardImpl, NULL, &is_iso_keyboard_fn));
     NAPI_CALL(env, napi_set_named_property(env, exports, "isISOKeyboard", is_iso_keyboard_fn));
   }
+  {
+    napi_value get_keyboard_backends_fn;
+    NAPI_CALL(env, napi_create_function(env, NULL, 0, GetKeyboardBackendsImpl, NULL, &get_keyboard_backends_fn));
+    NAPI_CALL(env, napi_set_named_property(env, exports, "getKeyboardBackends", get_keyboard_backends_fn));
+  }
 
   return exports;
 }

@@ -120,6 +120,15 @@ void ReleaseKeyboard(WaylandState *state) {
   state->keyboard = nullptr;
 }
 
+// Drops the keymap of a keyboard that went away, so that its absence is
+// reported, and so is the next keymap, even when it is the same.
+void ForgetKeymap(WaylandState *state) {
+  state->keymap.clear();
+  state->has_keymap = false;
+  state->group = 0;
+  state->changed = true;
+}
+
 void SeatCapabilities(void *data, struct wl_seat *seat, uint32_t capabilities) {
   WaylandState *state = static_cast<WaylandState*>(data);
   bool has_keyboard = (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) != 0;
@@ -127,7 +136,9 @@ void SeatCapabilities(void *data, struct wl_seat *seat, uint32_t capabilities) {
     state->keyboard = wl_seat_get_keyboard(seat);
     wl_keyboard_add_listener(state->keyboard, &kKeyboardListener, state);
   } else if (!has_keyboard && state->keyboard) {
+    // The seat lost its keyboard, for example when it was unplugged.
     ReleaseKeyboard(state);
+    ForgetKeymap(state);
   }
 }
 
@@ -184,13 +195,9 @@ void RegistryGlobalRemove(void *data, struct wl_registry *registry, uint32_t nam
     return;
   }
   // The seat we use went away, for example when its keyboard was unplugged or
-  // the compositor recreated it: drop its keymap and use another seat, so the
-  // next keymap is reported as a change even when it is the same.
+  // the compositor recreated it: drop its keymap and use another seat.
   ReleaseSeat(state);
-  state->keymap.clear();
-  state->has_keymap = false;
-  state->group = 0;
-  state->changed = true;
+  ForgetKeymap(state);
   if (!state->seats.empty()) {
     BindSeat(state, registry, state->seats.front().first, state->seats.front().second);
   }
@@ -629,25 +636,35 @@ bool ReadKeymap(std::string *keymap, uint32_t *group) {
   return connected;
 }
 
+// Reads the keymap of the compositor for the getters, and returns whether they
+// should use it (`*connected` then says whether there is one) or read the X
+// server instead. Unless the caller asked for the compositor (`only`), that is
+// when the default backend is X11, when the compositor went away, for example
+// in a nested session, or when only the X server knows the active layout.
+bool ReadKeymapForGetter(bool only, std::string *keymap, uint32_t *group, bool *connected) {
+  if (!only) {
+    Backend backend = GetBackend();
+    if (backend == Backend::X11) {
+      return false;
+    }
+    only = backend == Backend::WaylandOnly;
+  }
+  *connected = ReadKeymap(keymap, group);
+  return only || (*connected && !PreferXServer(*keymap));
+}
+
 }  // namespace
 
 namespace vscode_keyboard {
 
-napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t count, bool *handled) {
-  *handled = false;
-  if (GetBackend() == Backend::X11) {
-    return NULL;
-  }
-
+napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t count, bool only, bool *handled) {
   std::string keymap_text;
   uint32_t group = 0;
-  bool connected = ReadKeymap(&keymap_text, &group);
-  // Read the X server instead when the compositor went away, for example in a
-  // nested session, or when only the X server knows the active layout.
-  if (GetBackend() != Backend::WaylandOnly && (!connected || PreferXServer(keymap_text))) {
+  bool connected = false;
+  *handled = ReadKeymapForGetter(only, &keymap_text, &group, &connected);
+  if (!*handled) {
     return NULL;
   }
-  *handled = true;
 
   napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
@@ -712,19 +729,14 @@ napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t cou
   return result;
 }
 
-napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool *handled) {
-  *handled = false;
-  if (GetBackend() == Backend::X11) {
-    return NULL;
-  }
-
+napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool only, bool *handled) {
   std::string keymap_text;
   uint32_t group = 0;
-  bool connected = ReadKeymap(&keymap_text, &group);
-  if (GetBackend() != Backend::WaylandOnly && (!connected || PreferXServer(keymap_text))) {
+  bool connected = false;
+  *handled = ReadKeymapForGetter(only, &keymap_text, &group, &connected);
+  if (!*handled) {
     return NULL;
   }
-  *handled = true;
 
   napi_value result;
   NAPI_CALL(env, napi_get_null(env, &result));
@@ -761,6 +773,15 @@ static void CleanupListener(void *arg) {
   }
   Disconnect(state);
   delete state;
+}
+
+void GetWaylandStatus(bool *available, bool *is_default) {
+  std::string keymap_text;
+  uint32_t group = 0;
+  *available = ReadKeymap(&keymap_text, &group);
+  Backend backend = GetBackend();
+  *is_default = backend == Backend::WaylandOnly
+    || (backend == Backend::Wayland && *available && !PreferXServer(keymap_text));
 }
 
 bool ShouldListenToX11() {

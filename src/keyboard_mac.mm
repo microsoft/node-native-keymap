@@ -206,4 +206,8 @@ napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
   }
 }
 
+napi_value GetKeyboardBackendsImpl(napi_env env, napi_callback_info info) {
+  return napi_fetch_undefined(env);
+}
+
 } // namespace vscode_keyboard

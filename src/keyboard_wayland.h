@@ -15,7 +15,7 @@ namespace vscode_keyboard {
 // and group are only updated while an X11 window has keyboard focus, and its
 // _XKB_RULES_NAMES are never updated.
 //
-// The backend is chosen with the NATIVE_KEYMAP_BACKEND environment variable:
+// The default backend is chosen with the NATIVE_KEYMAP_BACKEND environment variable:
 //  - unset or `auto`: use the compositor when WAYLAND_DISPLAY is set and it
 //    provides a keymap, otherwise the X server. A client without a surface
 //    gets the compositor's keymap but not its active layout, so a keymap with
@@ -24,14 +24,20 @@ namespace vscode_keyboard {
 //  - `wayland`: only use the compositor.
 //  - `x11`: only use the X server.
 //
-// Each function sets `*handled` to false when the caller should use the X server.
+// With `only`, the getters read the compositor whatever the default is: the
+// caller asked for the Wayland backend. Otherwise they set `*handled` to false
+// when the caller should use the X server.
 
-napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t count, bool *handled);
+napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t count, bool only, bool *handled);
 
-napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool *handled);
+napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool only, bool *handled);
 
-// Whether the X server should be listened to as well, because the functions
-// above can read it.
+// Whether the compositor provides a keymap, which is when the getters return
+// one with `only`, and whether the default backend reads it.
+void GetWaylandStatus(bool *available, bool *is_default);
+
+// Whether the X server should be listened to as well, because the getters
+// can read it by default.
 bool ShouldListenToX11();
 
 // Runs on its own thread until the thread is cancelled, and notifies keymap

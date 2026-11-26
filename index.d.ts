@@ -42,7 +42,28 @@ export interface IMacKeyboardMapping {
 
 export type IKeyboardMapping = IWindowsKeyboardMapping | ILinuxKeyboardMapping | IMacKeyboardMapping;
 
-export function getKeyMap(): IKeyboardMapping;
+/**
+ * Where the keyboard layout is read from on Linux: the X server (also XWayland) or the Wayland compositor.
+ */
+export type KeyboardBackend = 'x11' | 'wayland';
+
+/**
+ * Which Linux backends can be read, and which one the getters read without a backend argument.
+ */
+export interface IKeyboardBackends {
+	/** Whether an X server can be reached, also XWayland. */
+	x11: boolean;
+	/** Whether the Wayland compositor provides a keymap: `false` when the module is built without the Wayland backend. */
+	wayland: boolean;
+	/** The backend the getters read without a backend argument. */
+	default: KeyboardBackend;
+}
+
+/**
+ * @param backend On Linux, read the X server or the Wayland compositor instead of the default backend.
+ * The result is empty when that backend can't be read. Ignored on Windows and macOS.
+ */
+export function getKeyMap(backend?: KeyboardBackend): IKeyboardMapping;
 
 export interface IWindowsKeyboardLayoutInfo {
 	name: string;
@@ -67,8 +88,17 @@ export interface IMacKeyboardLayoutInfo {
 
 export type IKeyboardLayoutInfo = IWindowsKeyboardLayoutInfo | ILinuxKeyboardLayoutInfo | IMacKeyboardLayoutInfo;
 
-export function getCurrentKeyboardLayout(): IKeyboardLayoutInfo;
+/**
+ * @param backend On Linux, read the X server or the Wayland compositor instead of the default backend.
+ * The result is `null` when that backend can't be read. Ignored on Windows and macOS.
+ */
+export function getCurrentKeyboardLayout(backend?: KeyboardBackend): IKeyboardLayoutInfo;
 
 export function onDidChangeKeyboardLayout(callback: () => void): void;
 
 export function isISOKeyboard(): boolean | undefined;
+
+/**
+ * On Linux, which backends can be read and which one is the default. `undefined` on Windows and macOS.
+ */
+export function getKeyboardBackends(): IKeyboardBackends | undefined;

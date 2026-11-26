@@ -55,6 +55,7 @@ napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info);
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data);
 void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data);
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info);
+napi_value GetKeyboardBackendsImpl(napi_env env, napi_callback_info info);
 
 void InvokeNotificationCallback(NotificationCallbackData *data);
 napi_status napi_set_named_property_string_utf8(napi_env env, napi_value object, const char *utf8_name, const char *value);
