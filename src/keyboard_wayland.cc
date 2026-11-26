@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <wayland-client.h>
@@ -45,7 +46,10 @@ enum class Backend {
 struct WaylandState {
   struct wl_display *display = nullptr;
   struct wl_registry *registry = nullptr;
+  // The registry name and version of each seat the compositor announced.
+  std::vector<std::pair<uint32_t, uint32_t>> seats;
   struct wl_seat *seat = nullptr;
+  uint32_t seat_name = 0;
   uint32_t seat_version = 0;
   struct wl_keyboard *keyboard = nullptr;
   std::string keymap;
@@ -135,17 +139,61 @@ const struct wl_seat_listener kSeatListener = {
   SeatName,
 };
 
+void BindSeat(WaylandState *state, struct wl_registry *registry, uint32_t name, uint32_t version) {
+  state->seat_name = name;
+  state->seat_version = version < kMaxSeatVersion ? version : kMaxSeatVersion;
+  state->seat = static_cast<struct wl_seat*>(wl_registry_bind(registry, name, &wl_seat_interface, state->seat_version));
+  wl_seat_add_listener(state->seat, &kSeatListener, state);
+}
+
+void ReleaseSeat(WaylandState *state) {
+  ReleaseKeyboard(state);
+  if (state->seat) {
+    if (state->seat_version >= WL_SEAT_RELEASE_SINCE_VERSION) {
+      wl_seat_release(state->seat);
+    } else {
+      wl_seat_destroy(state->seat);
+    }
+    state->seat = nullptr;
+  }
+  state->seat_name = 0;
+  state->seat_version = 0;
+}
+
 void RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
   WaylandState *state = static_cast<WaylandState*>(data);
+  if (strcmp(interface, wl_seat_interface.name) != 0) {
+    return;
+  }
+  state->seats.push_back(std::make_pair(name, version));
   // Like Chromium, use the first seat.
-  if (!state->seat && strcmp(interface, wl_seat_interface.name) == 0) {
-    state->seat_version = version < kMaxSeatVersion ? version : kMaxSeatVersion;
-    state->seat = static_cast<struct wl_seat*>(wl_registry_bind(registry, name, &wl_seat_interface, state->seat_version));
-    wl_seat_add_listener(state->seat, &kSeatListener, state);
+  if (!state->seat) {
+    BindSeat(state, registry, name, version);
   }
 }
 
 void RegistryGlobalRemove(void *data, struct wl_registry *registry, uint32_t name) {
+  WaylandState *state = static_cast<WaylandState*>(data);
+  for (size_t i = 0; i < state->seats.size(); i++) {
+    if (state->seats[i].first == name) {
+      state->seats.erase(state->seats.begin() + i);
+      break;
+    }
+  }
+  if (!state->seat || state->seat_name != name) {
+    return;
+  }
+  // The seat we use went away, for example when its keyboard was unplugged or
+  // the compositor recreated it: drop its keymap and use another seat, so the
+  // next keymap is reported as a change even when it is the same.
+  ReleaseSeat(state);
+  state->keymap.clear();
+  state->has_keymap = false;
+  state->group = 0;
+  state->changed = true;
+  if (!state->seats.empty()) {
+    BindSeat(state, registry, state->seats.front().first, state->seats.front().second);
+  }
 }
 
 const struct wl_registry_listener kRegistryListener = {
@@ -242,15 +290,7 @@ bool Roundtrip(WaylandState *state, int timeout_ms) {
 }
 
 void Disconnect(WaylandState *state) {
-  ReleaseKeyboard(state);
-  if (state->seat) {
-    if (state->seat_version >= WL_SEAT_RELEASE_SINCE_VERSION) {
-      wl_seat_release(state->seat);
-    } else {
-      wl_seat_destroy(state->seat);
-    }
-    state->seat = nullptr;
-  }
+  ReleaseSeat(state);
   if (state->registry) {
     wl_registry_destroy(state->registry);
     state->registry = nullptr;
@@ -553,6 +593,27 @@ void GetLayoutsFromGroupNames(const std::string &keymap_text, std::string *layou
   }
 }
 
+size_t CountLayouts(const std::string &keymap_text) {
+  struct xkb_context *context = NULL;
+  struct xkb_keymap *keymap = CompileKeymap(&context, keymap_text);
+  size_t count = 0;
+  if (keymap) {
+    count = xkb_keymap_num_layouts(keymap);
+    xkb_keymap_unref(keymap);
+  }
+  if (context) {
+    xkb_context_unref(context);
+  }
+  return count;
+}
+
+// A client without a surface never learns which layout of the keymap is
+// active, while the X server tracks it for the focused XWayland window, and
+// VS Code runs under XWayland unless it is started with --ozone-platform=wayland.
+bool PreferXServer(const std::string &keymap_text) {
+  return CountLayouts(keymap_text) > 1 && vscode_keyboard::IsXServerAvailable();
+}
+
 const char *GetEnvOr(const char *name, const char *fallback) {
   const char *value = getenv(name);
   return value && *value ? value : fallback;
@@ -581,8 +642,9 @@ napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t cou
   std::string keymap_text;
   uint32_t group = 0;
   bool connected = ReadKeymap(&keymap_text, &group);
-  if (!connected && GetBackend() != Backend::WaylandOnly) {
-    // The compositor went away, for example in a nested session.
+  // Read the X server instead when the compositor went away, for example in a
+  // nested session, or when only the X server knows the active layout.
+  if (GetBackend() != Backend::WaylandOnly && (!connected || PreferXServer(keymap_text))) {
     return NULL;
   }
   *handled = true;
@@ -659,7 +721,7 @@ napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool *handled) {
   std::string keymap_text;
   uint32_t group = 0;
   bool connected = ReadKeymap(&keymap_text, &group);
-  if (!connected && GetBackend() != Backend::WaylandOnly) {
+  if (GetBackend() != Backend::WaylandOnly && (!connected || PreferXServer(keymap_text))) {
     return NULL;
   }
   *handled = true;
@@ -701,39 +763,55 @@ static void CleanupListener(void *arg) {
   delete state;
 }
 
-bool ListenToWaylandEvents(NotificationCallbackData *data) {
+bool ShouldListenToX11() {
+  return GetBackend() != Backend::WaylandOnly;
+}
+
+void ListenToWaylandEvents(NotificationCallbackData *data) {
   // libwayland must not be interrupted while it holds its locks: only allow
-  // cancellation while waiting for events (see DispatchOnce).
+  // cancellation while waiting (see DispatchOnce).
   int old_state;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
   if (GetBackend() == Backend::X11) {
     pthread_setcancelstate(old_state, NULL);
-    return false;
+    return;
   }
 
-  bool listened = false;
   WaylandState *state = new WaylandState();
   pthread_cleanup_push(CleanupListener, state);
 
-  if (Connect(state)) {
-    listened = true;
-    state->changed = false;
-    while (true) {
-      if (DispatchOnce(state, 1000, true) < 0) {
-        break;
-      }
-      if (state->changed) {
-        state->changed = false;
+  bool first_attempt = true;
+  while (true) {
+    if (Connect(state)) {
+      if (!first_attempt) {
+        // Connected again, maybe to another compositor with another keymap.
         InvokeNotificationCallback(data);
       }
+      state->changed = false;
+      while (DispatchOnce(state, 1000, true) >= 0) {
+        if (state->changed) {
+          state->changed = false;
+          InvokeNotificationCallback(data);
+        }
+      }
+      // The connection is lost: until it is back, the getters read the X server.
+      InvokeNotificationCallback(data);
     }
+    first_attempt = false;
+    if (state->read_prepared) {
+      wl_display_cancel_read(state->display);
+      state->read_prepared = false;
+    }
+    Disconnect(state);
+    *state = WaylandState();
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    poll(NULL, 0, 1000);
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
   }
 
   pthread_cleanup_pop(1);
   pthread_setcancelstate(old_state, NULL);
-  // When no compositor could be reached, listen to the X server instead, unless
-  // only the compositor is wanted.
-  return listened || GetBackend() == Backend::WaylandOnly;
 }
 
 }  // namespace vscode_keyboard

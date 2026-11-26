@@ -17,7 +17,10 @@ namespace vscode_keyboard {
 //
 // The backend is chosen with the NATIVE_KEYMAP_BACKEND environment variable:
 //  - unset or `auto`: use the compositor when WAYLAND_DISPLAY is set and it
-//    provides a keymap, otherwise the X server.
+//    provides a keymap, otherwise the X server. A client without a surface
+//    gets the compositor's keymap but not its active layout, so a keymap with
+//    several layouts is read from the X server when one is reachable: it
+//    tracks the active layout for the focused XWayland window.
 //  - `wayland`: only use the compositor.
 //  - `x11`: only use the X server.
 //
@@ -27,10 +30,18 @@ napi_value GetKeyMapWayland(napi_env env, const KeycodeMapEntry *map, size_t cou
 
 napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool *handled);
 
-// Runs on the listener thread until the thread is cancelled or the connection
-// to the compositor is lost. Returns false right away when the caller should
-// listen to the X server instead.
-bool ListenToWaylandEvents(NotificationCallbackData *data);
+// Whether the X server should be listened to as well, because the functions
+// above can read it.
+bool ShouldListenToX11();
+
+// Runs on its own thread until the thread is cancelled, and notifies keymap
+// changes of the compositor. When the connection is lost, it notifies (the
+// functions above now read the X server) and connects again every second.
+// Returns right away when the compositor is not used.
+void ListenToWaylandEvents(NotificationCallbackData *data);
+
+// Whether an X server can be reached. Implemented in keyboard_x.cc.
+bool IsXServerAvailable();
 
 }  // namespace vscode_keyboard
 

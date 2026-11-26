@@ -160,6 +160,17 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
+#ifdef NATIVE_KEYMAP_WAYLAND
+bool IsXServerAvailable() {
+  Display *display = XOpenDisplay("");
+  if (!display) {
+    return false;
+  }
+  XCloseDisplay(display);
+  return true;
+}
+#endif
+
 #define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
 #define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
 #include "../deps/chromium/dom_code_data.inc"
@@ -415,9 +426,18 @@ void* ListenToXEvents(void *arg) {
 }
 
 #ifdef NATIVE_KEYMAP_WAYLAND
-static void* ListenToKeyboardEvents(void *arg) {
-  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
-  if (ListenToWaylandEvents(data)) {
+static void* ListenToWaylandThread(void *arg) {
+  ListenToWaylandEvents(static_cast<NotificationCallbackData*>(arg));
+  return NULL;
+}
+
+static void* ListenToX11Thread(void *arg) {
+  // Choosing the backend can connect to the compositor: don't cancel it midway.
+  int old_state;
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
+  bool listen = ShouldListenToX11();
+  pthread_setcancelstate(old_state, NULL);
+  if (!listen) {
     return NULL;
   }
   return ListenToXEvents(arg);
@@ -426,7 +446,10 @@ static void* ListenToKeyboardEvents(void *arg) {
 
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
 #ifdef NATIVE_KEYMAP_WAYLAND
-  pthread_create(&data->tid, NULL, &ListenToKeyboardEvents, data);
+  // In automatic mode both run: the getters read keymaps with several layouts,
+  // and the keymap while the compositor is gone, from the X server.
+  pthread_create(&data->wayland_tid, NULL, &ListenToWaylandThread, data);
+  pthread_create(&data->tid, NULL, &ListenToX11Thread, data);
 #else
   pthread_create(&data->tid, NULL, &ListenToXEvents, data);
 #endif
@@ -436,6 +459,10 @@ void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
   pthread_cancel(data->tid);
   void *res;
   pthread_join(data->tid, &res);
+#ifdef NATIVE_KEYMAP_WAYLAND
+  pthread_cancel(data->wayland_tid);
+  pthread_join(data->wayland_tid, &res);
+#endif
 }
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {

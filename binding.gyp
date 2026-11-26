@@ -46,8 +46,9 @@
           "variables": {
             # Read the keymap from the Wayland compositor when one is running.
             # Built when libwayland-client and libxkbcommon are found; set
-            # NATIVE_KEYMAP_WAYLAND=0 to build the X11 backend only.
-            "native_keymap_wayland%": "<!(test \"${NATIVE_KEYMAP_WAYLAND:-1}\" != 0 && ${PKG_CONFIG:-pkg-config} --exists wayland-client xkbcommon && echo 1 || echo 0)"
+            # NATIVE_KEYMAP_WAYLAND=0 to build the X11 backend only, or
+            # NATIVE_KEYMAP_WAYLAND=1 to fail when the libraries are missing.
+            "native_keymap_wayland%": "<!(if [ \"${NATIVE_KEYMAP_WAYLAND:-auto}\" = 0 ]; then echo 0; elif ${PKG_CONFIG:-pkg-config} --exists wayland-client xkbcommon; then echo 1; elif [ \"${NATIVE_KEYMAP_WAYLAND:-auto}\" = 1 ]; then echo 'NATIVE_KEYMAP_WAYLAND=1 needs libwayland-dev and libxkbcommon-dev' >&2; exit 1; else echo 0; fi)"
           },
           "conditions": [
             ['native_keymap_wayland in (1, "1")', {

@@ -44,6 +44,9 @@ typedef struct {
 #if defined(__unix__)
   pthread_t tid;
 #endif
+#if defined(__unix__) && defined(NATIVE_KEYMAP_WAYLAND)
+  pthread_t wayland_tid;
+#endif
   volatile napi_threadsafe_function tsfn;
 } NotificationCallbackData;
 
