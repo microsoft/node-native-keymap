@@ -380,22 +380,42 @@ struct WaylandState {
   bool read_prepared = false;
 };
 
+// Drops the keymap of a keyboard that went away, so that its absence is
+// reported, and so is the next keymap, even when it is the same.
+void ForgetKeymap(WaylandState *state) {
+  state->keymap.clear();
+  state->has_keymap = false;
+  state->group = 0;
+  state->changed = true;
+}
+
 void KeyboardKeymap(void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size) {
   WaylandState *state = static_cast<WaylandState*>(data);
+  std::string keymap;
+  bool read = false;
   if (format == WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1 && size > 0) {
     void *mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (mapped != MAP_FAILED) {
       const char *text = static_cast<const char*>(mapped);
-      std::string keymap(text, strnlen(text, size));
+      keymap.assign(text, strnlen(text, size));
       munmap(mapped, size);
-      if (!state->has_keymap || keymap != state->keymap) {
-        state->keymap = keymap;
-        state->has_keymap = true;
-        state->changed = true;
-      }
+      read = true;
     }
   }
   close(fd);
+  if (!read) {
+    // The keyboard has no keymap now (no_keymap), one in a format we can't
+    // read, or one we couldn't map: what we had no longer applies.
+    if (state->has_keymap) {
+      ForgetKeymap(state);
+    }
+    return;
+  }
+  if (!state->has_keymap || keymap != state->keymap) {
+    state->keymap = keymap;
+    state->has_keymap = true;
+    state->changed = true;
+  }
 }
 
 void KeyboardEnter(void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys) {
@@ -439,15 +459,6 @@ void ReleaseKeyboard(WaylandState *state) {
     wl_keyboard_destroy(state->keyboard);
   }
   state->keyboard = nullptr;
-}
-
-// Drops the keymap of a keyboard that went away, so that its absence is
-// reported, and so is the next keymap, even when it is the same.
-void ForgetKeymap(WaylandState *state) {
-  state->keymap.clear();
-  state->has_keymap = false;
-  state->group = 0;
-  state->changed = true;
 }
 
 void SeatCapabilities(void *data, struct wl_seat *seat, uint32_t capabilities) {

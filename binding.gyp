@@ -41,7 +41,8 @@
             "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --cflags | sed s/-I//g)"
           ],
           "libraries": [
-            "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --libs)"
+            "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --libs)",
+            "-ldl"
           ],
           "variables": {
             # Read the keymap from the Wayland compositor when one is running.
@@ -57,9 +58,6 @@
               ],
               "defines": [
                 "NATIVE_KEYMAP_WAYLAND"
-              ],
-              "libraries": [
-                "-ldl"
               ]
             }]
           ]
