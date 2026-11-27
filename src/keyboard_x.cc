@@ -218,10 +218,14 @@ static bool GetRequestedBackend(napi_env env, napi_callback_info info, Requested
 
 #ifndef NATIVE_KEYMAP_WAYLAND
 // Whether NATIVE_KEYMAP_BACKEND=wayland asks for the compositor only, which a
-// build without the Wayland backend can't read.
+// build without the Wayland backend can't read. Read once per process, as the
+// build with the Wayland backend does, so the getters and the listener agree.
 static bool IsWaylandBackendForced() {
-  const char *requested = getenv("NATIVE_KEYMAP_BACKEND");
-  return requested && strcmp(requested, "wayland") == 0;
+  static const bool forced = [] {
+    const char *requested = getenv("NATIVE_KEYMAP_BACKEND");
+    return requested && strcmp(requested, "wayland") == 0;
+  }();
+  return forced;
 }
 #endif
 
