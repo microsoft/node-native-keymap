@@ -709,6 +709,9 @@ Backend ComputeBackend() {
   // A compositor that is slow to answer at startup, for example under load,
   // is still the compositor: until it answers, the getters read the X server,
   // and the listener notifies once it connects.
+  if (timed_out && !connected) {
+    g_missed_compositor = true;
+  }
   return connected || timed_out ? Backend::Wayland : Backend::X11;
 }
 
