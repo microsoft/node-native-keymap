@@ -41,7 +41,25 @@
             "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --cflags | sed s/-I//g)"
           ],
           "libraries": [
-            "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --libs)"
+            "<!@(${PKG_CONFIG:-pkg-config} x11 xkbfile --libs)",
+            "-ldl"
+          ],
+          "variables": {
+            # Read the keymap from the Wayland compositor when one is running.
+            # libwayland-client and libxkbcommon are loaded at runtime, so
+            # building needs neither; set NATIVE_KEYMAP_WAYLAND=0 to build the
+            # X11 backend only.
+            "native_keymap_wayland%": "<!(if [ \"${NATIVE_KEYMAP_WAYLAND:-1}\" = 0 ]; then echo 0; else echo 1; fi)"
+          },
+          "conditions": [
+            ['native_keymap_wayland in (1, "1")', {
+              "sources": [
+                "src/keyboard_wayland.cc"
+              ],
+              "defines": [
+                "NATIVE_KEYMAP_WAYLAND"
+              ]
+            }]
           ]
         }],
         ['OS=="freebsd"', {

@@ -5,6 +5,10 @@
 
 var index = require('../index');
 
+if (process.platform === 'linux') {
+  console.log('getKeyboardBackends: ', index.getKeyboardBackends());
+  console.log('-------------')
+}
 console.log('getCurrentKeyboardLayout: ', index.getCurrentKeyboardLayout());
 console.log('-------------')
 console.log('getKeyMap: ', index.getKeyMap());

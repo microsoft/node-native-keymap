@@ -12,8 +12,23 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XKBrules.h>
 
+#include <dlfcn.h>
+#include <poll.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <algorithm>
+#include <atomic>
+#include <mutex>
+#include <vector>
+
 #include "../deps/chromium/macros.h"
 #include "../deps/chromium/x/keysym_to_unicode.h"
+
+#ifdef NATIVE_KEYMAP_WAYLAND
+#include "keyboard_wayland.h"
+#endif
 
 typedef struct _XDisplay XDisplay;
 
@@ -156,6 +171,64 @@ std::string GetStrFromXEvent(const XEvent* xev) {
 
 namespace vscode_keyboard {
 
+bool IsXServerAvailable() {
+  Display *display = XOpenDisplay("");
+  if (!display) {
+    return false;
+  }
+  XCloseDisplay(display);
+  return true;
+}
+
+// The backend a getter was asked for: none (the default), the X server or the
+// compositor. Throws a TypeError and returns false for anything else.
+enum class RequestedBackend { Default, X11, Wayland };
+
+static bool GetRequestedBackend(napi_env env, napi_callback_info info, RequestedBackend *backend) {
+  *backend = RequestedBackend::Default;
+  size_t argc = 1;
+  napi_value argv[1];
+  NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL), false);
+  if (argc < 1) {
+    return true;
+  }
+  napi_valuetype type;
+  NAPI_CALL_BASE(env, napi_typeof(env, argv[0], &type), false);
+  if (type == napi_undefined) {
+    return true;
+  }
+  if (type == napi_string) {
+    // Long enough to tell longer strings from the names, which it truncates.
+    char value[16];
+    size_t length = 0;
+    NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, argv[0], value, sizeof(value), &length), false);
+    std::string name(value, length);
+    if (name == "x11") {
+      *backend = RequestedBackend::X11;
+      return true;
+    }
+    if (name == "wayland") {
+      *backend = RequestedBackend::Wayland;
+      return true;
+    }
+  }
+  napi_throw_type_error(env, NULL, "The keyboard backend must be 'x11', 'wayland' or undefined.");
+  return false;
+}
+
+#ifndef NATIVE_KEYMAP_WAYLAND
+// Whether NATIVE_KEYMAP_BACKEND=wayland asks for the compositor only, which a
+// build without the Wayland backend can't read. Read once per process, as the
+// build with the Wayland backend does, so the getters and the listener agree.
+static bool IsWaylandBackendForced() {
+  static const bool forced = [] {
+    const char *requested = getenv("NATIVE_KEYMAP_BACKEND");
+    return requested && strcmp(requested, "wayland") == 0;
+  }();
+  return forced;
+}
+#endif
+
 #define DOM_CODE(usb, evdev, xkb, win, mac, code, id) {usb, xkb, code}
 #define DOM_CODE_DECLARATION const KeycodeMapEntry usb_keycode_map[] =
 #include "../deps/chromium/dom_code_data.inc"
@@ -163,8 +236,30 @@ namespace vscode_keyboard {
 #undef DOM_CODE_DECLARATION
 
 napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
+  RequestedBackend backend;
+  if (!GetRequestedBackend(env, info, &backend)) {
+    return NULL;
+  }
 
   napi_value result;
+
+#ifdef NATIVE_KEYMAP_WAYLAND
+  if (backend != RequestedBackend::X11) {
+    bool handled = false;
+    napi_value wayland_result = GetKeyMapWayland(env, usb_keycode_map, sizeof(usb_keycode_map) / sizeof(usb_keycode_map[0]), backend == RequestedBackend::Wayland, &handled);
+    if (handled) {
+      return wayland_result;
+    }
+  }
+#else
+  if (backend == RequestedBackend::Wayland || (backend == RequestedBackend::Default && IsWaylandBackendForced())) {
+    // Built without the Wayland backend, which the caller or
+    // NATIVE_KEYMAP_BACKEND asked for.
+    NAPI_CALL(env, napi_create_object(env, &result));
+    return result;
+  }
+#endif
+
   NAPI_CALL(env, napi_create_object(env, &result));
 
   Display *display;
@@ -243,8 +338,30 @@ napi_value GetKeyMapImpl(napi_env env, napi_callback_info info) {
 }
 
 napi_value GetCurrentKeyboardLayoutImpl(napi_env env, napi_callback_info info) {
+  RequestedBackend backend;
+  if (!GetRequestedBackend(env, info, &backend)) {
+    return NULL;
+  }
 
   napi_value result;
+
+#ifdef NATIVE_KEYMAP_WAYLAND
+  if (backend != RequestedBackend::X11) {
+    bool handled = false;
+    napi_value wayland_result = GetCurrentKeyboardLayoutWayland(env, backend == RequestedBackend::Wayland, &handled);
+    if (handled) {
+      return wayland_result;
+    }
+  }
+#else
+  if (backend == RequestedBackend::Wayland || (backend == RequestedBackend::Default && IsWaylandBackendForced())) {
+    // Built without the Wayland backend, which the caller or
+    // NATIVE_KEYMAP_BACKEND asked for.
+    NAPI_CALL(env, napi_get_null(env, &result));
+    return result;
+  }
+#endif
+
   NAPI_CALL(env, napi_get_null(env, &result));
 
   Display *display;
@@ -293,7 +410,7 @@ bool KbStatesEqual(KbState *a, KbState *b) {
 void ReadKbState(Display *display, KbState *dst) {
   // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#determining_keyboard_state
   // Get effective group index
-  XkbStateRec xkb_state;
+  XkbStateRec xkb_state = {};
   XkbGetState(display, XkbUseCoreKbd, &xkb_state);
   dst->effective_group_index = xkb_state.group;
 
@@ -309,99 +426,275 @@ void ReadKbState(Display *display, KbState *dst) {
   }
 }
 
-static void FlushAndCloseDisplay(void *arg) {
-  Display *display = static_cast<Display*>(arg);
-  XFlush(display);
-  XCloseDisplay(display);
+// The X server can go away while we listen: XWayland can be restarted, a
+// nested X server can stop. Xlib then calls the IO error handler and, since
+// libX11 1.7, the display's IO error exit handler, which by default exits the
+// process. XSetIOErrorExitHandler is resolved at runtime, so that the module
+// still loads with an older libX11.
+typedef void (*IOErrorExitHandlerFunction)(Display*, void*);
+typedef void (*SetIOErrorExitHandlerFunction)(Display*, IOErrorExitHandlerFunction, void*);
+
+struct XListener {
+  Display *display = nullptr;
+  std::atomic<bool> lost{false};
+};
+
+static std::mutex g_x_listeners_mutex;
+static std::vector<XListener*> g_x_listeners;
+static SetIOErrorExitHandlerFunction g_set_io_error_exit_handler = NULL;
+static XIOErrorHandler g_previous_io_error_handler = NULL;
+static pthread_once_t g_install_io_error_handlers = PTHREAD_ONCE_INIT;
+
+static int OnXIOError(Display *display) {
+  {
+    std::lock_guard<std::mutex> lock(g_x_listeners_mutex);
+    for (XListener *listener : g_x_listeners) {
+      if (listener->display == display) {
+        listener->lost = true;
+        return 0;
+      }
+    }
+  }
+  // Not a listener's display: handle it as before.
+  return g_previous_io_error_handler ? g_previous_io_error_handler(display) : 0;
 }
 
-void* ListenToXEvents(void *arg) {
-  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
+static void OnXIOErrorExit(Display*, void*) {
+  // Don't exit: the listener connects again.
+}
 
-  Display *display;
-  if (!(display = XOpenDisplay(""))) {
-    return NULL;
+static void InstallXIOErrorHandlers() {
+#ifdef RTLD_NOLOAD
+  void *libx11 = dlopen("libX11.so.6", RTLD_LAZY | RTLD_NOLOAD);
+  if (libx11) {
+    void *address = dlsym(libx11, "XSetIOErrorExitHandler");
+    memcpy(&g_set_io_error_exit_handler, &address, sizeof(address));
+    dlclose(libx11);
   }
-
-  pthread_cleanup_push(FlushAndCloseDisplay, display);
-
-  int xkblib_major = XkbMajorVersion;
-  int xkblib_minor = XkbMinorVersion;
-  if (!XkbLibraryVersion(&xkblib_major, &xkblib_minor)) {
-    return NULL;
+#endif
+  if (g_set_io_error_exit_handler) {
+    // Process-wide: the displays of other code go to the handler installed before.
+    // libX11 calls this handler before the display's exit handler, and the
+    // default one exits the process, so the exit handler alone can't keep the
+    // process alive. If other code replaces this handler later, losing the X
+    // server exits the process, as it did before.
+    g_previous_io_error_handler = XSetIOErrorHandler(OnXIOError);
   }
+}
 
-  int opcode = 0;
-  int xkb_base_event_code = 0;
-  int xkb_base_error_code = 0;
-  if (!XkbQueryExtension(display, &opcode, &xkb_base_event_code, &xkb_base_error_code, &xkblib_major, &xkblib_minor)) {
-    return NULL;
+static bool OpenListenerDisplay(XListener *listener) {
+  Display *display = XOpenDisplay("");
+  if (!display) {
+    return false;
   }
+  if (g_set_io_error_exit_handler) {
+    g_set_io_error_exit_handler(display, OnXIOErrorExit, NULL);
+  }
+  std::lock_guard<std::mutex> lock(g_x_listeners_mutex);
+  listener->display = display;
+  listener->lost = false;
+  return true;
+}
 
-  // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#xkb_event_types
-  // Listen only to the `XkbStateNotify` event
-  XkbSelectEvents(display, XkbUseCoreKbd, XkbAllEventsMask, XkbStateNotifyMask);
+static void CloseListenerDisplay(XListener *listener) {
+  Display *display = listener->display;
+  if (!display) {
+    return;
+  }
+  if (!listener->lost) {
+    XFlush(display);
+  }
+  if (!listener->lost || g_set_io_error_exit_handler) {
+    XCloseDisplay(display);
+  }
+  // Else the X server is gone and libX11 is older than 1.7, where closing the
+  // display would exit the process: leak it.
+  std::lock_guard<std::mutex> lock(g_x_listeners_mutex);
+  listener->display = nullptr;
+}
 
-  KbState last_state;
-  ReadKbState(display, &last_state);
+static void CleanupXListener(void *arg) {
+  XListener *listener = static_cast<XListener*>(arg);
+  CloseListenerDisplay(listener);
+  {
+    std::lock_guard<std::mutex> lock(g_x_listeners_mutex);
+    g_x_listeners.erase(std::remove(g_x_listeners.begin(), g_x_listeners.end(), listener), g_x_listeners.end());
+  }
+  delete listener;
+}
+
+// Notifies changes of the keyboard state until the X server goes away.
+static void ListenUntilLost(XListener *listener, int xkb_base_event_code, KbState *last_state, NotificationCallbackData *data) {
+  Display *display = listener->display;
+  short lost_events = POLLHUP | POLLERR | POLLNVAL;
+  struct pollfd pfd;
+  pfd.fd = ConnectionNumber(display);
+  pfd.events = POLLIN;
+#ifdef POLLRDHUP
+  pfd.events |= POLLRDHUP;
+  lost_events |= POLLRDHUP;
+#endif
 
   XkbEvent event;
   KbState current_state;
-  fd_set in_fds;
-  struct timeval tv;
-  int x11_fd = ConnectionNumber(display);
+  while (!listener->lost) {
+    // Wait for an event or a second, cancellable only here.
+    pfd.revents = 0;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    int ready = poll(&pfd, 1, 1000);
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    if (ready > 0 && (pfd.revents & lost_events)) {
+      // Gone: stop before Xlib reads the connection, which exits the process
+      // with libX11 older than 1.7.
+      listener->lost = true;
+      return;
+    }
 
-  while (true) {
-    // See https://stackoverflow.com/a/8592969 which explains
-    // the technique of waiting for an XEvent with a timeout
-
-    // Create a File Description Set containing x11_fd
-    FD_ZERO(&in_fds);
-    FD_SET(x11_fd, &in_fds);
-
-    // Set the timer to 1s.
-    tv.tv_usec = 0;
-    tv.tv_sec = 1;
-
-    // Wait for X Event or the timer
-    select(x11_fd + 1, &in_fds, NULL, NULL, &tv);
-
-    // Handle pending XEvents
-    while (XPending(display)) {
-
+    // XNextEvent waits when no event is queued, and has none to return once
+    // the connection is lost: only call it for queued events.
+    while (!listener->lost && XPending(display)) {
       XNextEvent(display, &event.core);
-
       if (event.type == xkb_base_event_code && event.any.xkb_type == XkbStateNotify) {
         ReadKbState(display, &current_state);
-        // printf("current state: %d | %s | %s\n", current_state.effective_group_index, current_state.layout.c_str(), current_state.variant.c_str());
-        if (!KbStatesEqual(&last_state, &current_state)) {
-          last_state.effective_group_index = current_state.effective_group_index;
-          last_state.layout = current_state.layout;
-          last_state.variant = current_state.variant;
-
+        if (!listener->lost && !KbStatesEqual(last_state, &current_state)) {
+          *last_state = current_state;
           InvokeNotificationCallback(data);
         }
       }
     }
   }
+}
+
+void* ListenToXEvents(void *arg) {
+  NotificationCallbackData *data = static_cast<NotificationCallbackData*>(arg);
+
+  // Only cancelled while waiting, never inside Xlib.
+  int old_state;
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
+
+  const char *display_name = getenv("DISPLAY");
+  int xkblib_major = XkbMajorVersion;
+  int xkblib_minor = XkbMinorVersion;
+  if (!display_name || !display_name[0] || !XkbLibraryVersion(&xkblib_major, &xkblib_minor)) {
+    pthread_setcancelstate(old_state, NULL);
+    return NULL;
+  }
+
+  pthread_once(&g_install_io_error_handlers, InstallXIOErrorHandlers);
+
+  XListener *listener = new XListener();
+  {
+    std::lock_guard<std::mutex> lock(g_x_listeners_mutex);
+    g_x_listeners.push_back(listener);
+  }
+  pthread_cleanup_push(CleanupXListener, listener);
+
+  bool first_attempt = true;
+  bool has_xkb = true;
+  while (has_xkb) {
+    if (OpenListenerDisplay(listener)) {
+      Display *display = listener->display;
+      int opcode = 0;
+      int xkb_base_event_code = 0;
+      int xkb_base_error_code = 0;
+      int major = xkblib_major;
+      int minor = xkblib_minor;
+      if (XkbQueryExtension(display, &opcode, &xkb_base_event_code, &xkb_base_error_code, &major, &minor)) {
+        // See https://www.x.org/releases/X11R7.6/doc/libX11/specs/XKB/xkblib.html#xkb_event_types
+        // Listen only to the `XkbStateNotify` event
+        XkbSelectEvents(display, XkbUseCoreKbd, XkbAllEventsMask, XkbStateNotifyMask);
+
+        KbState last_state;
+        ReadKbState(display, &last_state);
+        if (!first_attempt) {
+          // Connected again, maybe to another X server with another keymap.
+          InvokeNotificationCallback(data);
+        }
+        ListenUntilLost(listener, xkb_base_event_code, &last_state, data);
+        CloseListenerDisplay(listener);
+        // The X server is gone: callers read the keymap again.
+        InvokeNotificationCallback(data);
+      } else {
+        // An X server without XKB: stop, unless it went away meanwhile.
+        has_xkb = listener->lost;
+        CloseListenerDisplay(listener);
+      }
+    }
+    first_attempt = false;
+
+    if (has_xkb) {
+      pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+      poll(NULL, 0, 1000);
+      pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    }
+  }
 
   pthread_cleanup_pop(1);
-
+  pthread_setcancelstate(old_state, NULL);
   return NULL;
 }
 
+#ifdef NATIVE_KEYMAP_WAYLAND
+static void* ListenToWaylandThread(void *arg) {
+  ListenToWaylandEvents(static_cast<NotificationCallbackData*>(arg));
+  return NULL;
+}
+#endif
+
+static void* ListenToX11Thread(void *arg) {
+  // Choosing the backend can connect to the compositor: don't cancel it midway.
+  int old_state;
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
+#ifdef NATIVE_KEYMAP_WAYLAND
+  bool listen = ShouldListenToX11();
+#else
+  bool listen = !IsWaylandBackendForced();
+#endif
+  pthread_setcancelstate(old_state, NULL);
+  if (!listen) {
+    return NULL;
+  }
+  return ListenToXEvents(arg);
+}
+
 void RegisterKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
-  pthread_create(&data->tid, NULL, &ListenToXEvents, data);
+#ifdef NATIVE_KEYMAP_WAYLAND
+  // In automatic mode both run: the getters read keymaps with several layouts,
+  // and the keymap while the compositor is gone, from the X server.
+  pthread_create(&data->wayland_tid, NULL, &ListenToWaylandThread, data);
+#endif
+  pthread_create(&data->tid, NULL, &ListenToX11Thread, data);
 }
 
 void DisposeKeyboardLayoutChangeListenerImpl(NotificationCallbackData *data) {
   pthread_cancel(data->tid);
   void *res;
   pthread_join(data->tid, &res);
+#ifdef NATIVE_KEYMAP_WAYLAND
+  pthread_cancel(data->wayland_tid);
+  pthread_join(data->wayland_tid, &res);
+#endif
 }
 
 napi_value IsISOKeyboardImpl(napi_env env, napi_callback_info info) {
   return napi_fetch_undefined(env);
+}
+
+napi_value GetKeyboardBackendsImpl(napi_env env, napi_callback_info info) {
+  bool wayland = false;
+  bool wayland_is_default = false;
+#ifdef NATIVE_KEYMAP_WAYLAND
+  GetWaylandStatus(&wayland, &wayland_is_default);
+#else
+  wayland_is_default = IsWaylandBackendForced();
+#endif
+
+  napi_value result;
+  NAPI_CALL(env, napi_create_object(env, &result));
+  NAPI_CALL(env, napi_set_named_property(env, result, "x11", napi_fetch_boolean(env, IsXServerAvailable())));
+  NAPI_CALL(env, napi_set_named_property(env, result, "wayland", napi_fetch_boolean(env, wayland)));
+  NAPI_CALL(env, napi_set_named_property_string_utf8(env, result, "default", wayland_is_default ? "wayland" : "x11"));
+  return result;
 }
 
 } // namespace vscode_keyboard
