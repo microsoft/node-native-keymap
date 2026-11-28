@@ -53,7 +53,7 @@ export type KeyboardBackend = 'x11' | 'wayland';
 export interface IKeyboardBackends {
 	/** Whether an X server can be reached, also XWayland. */
 	x11: boolean;
-	/** Whether the Wayland compositor provides a keymap: `false` when the module is built without the Wayland backend, or when libwayland-client or libxkbcommon can't be loaded. */
+	/** Whether the Wayland compositor provides a keymap: `false` when `WAYLAND_DISPLAY` is unset or empty, when the module is built without the Wayland backend, or when libwayland-client or libxkbcommon can't be loaded. */
 	wayland: boolean;
 	/** The backend the getters read without a backend argument. */
 	default: KeyboardBackend;
@@ -61,7 +61,7 @@ export interface IKeyboardBackends {
 
 /**
  * @param backend On Linux, read the X server or the Wayland compositor instead of the default backend.
- * The result is empty when that backend can't be read. Ignored on Windows and macOS.
+ * The result is empty when that backend can't be read. Ignored on Windows and macOS. On Linux, any other value logs a TypeError and gives an empty result.
  */
 export function getKeyMap(backend?: KeyboardBackend): IKeyboardMapping;
 
@@ -90,7 +90,7 @@ export type IKeyboardLayoutInfo = IWindowsKeyboardLayoutInfo | ILinuxKeyboardLay
 
 /**
  * @param backend On Linux, read the X server or the Wayland compositor instead of the default backend.
- * The result is `null` when that backend can't be read. Ignored on Windows and macOS.
+ * The result is `null` when that backend can't be read. Ignored on Windows and macOS. On Linux, any other value logs a TypeError and gives `null`.
  */
 export function getCurrentKeyboardLayout(backend?: KeyboardBackend): IKeyboardLayoutInfo;
 

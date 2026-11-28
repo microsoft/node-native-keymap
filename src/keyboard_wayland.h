@@ -22,9 +22,15 @@ namespace vscode_keyboard {
 //    provides a keymap, otherwise the X server. A client without a surface
 //    gets the compositor's keymap but not its active layout, so a keymap with
 //    several layouts is read from the X server when one is reachable: it
-//    tracks the active layout for the focused XWayland window.
+//    tracks the active layout for the focused XWayland window. A compositor
+//    that doesn't answer within 2 seconds stays the default: until it does,
+//    the getters read the X server.
 //  - `wayland`: only use the compositor.
 //  - `x11`: only use the X server.
+//
+// The compositor is the one WAYLAND_DISPLAY names: without it, libwayland
+// would connect to wayland-0, which can belong to another session, so the
+// compositor is treated as absent.
 //
 // With `only`, the getters read the compositor whatever the default is: the
 // caller asked for the Wayland backend. Otherwise they set `*handled` to false

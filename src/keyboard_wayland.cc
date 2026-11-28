@@ -18,6 +18,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <string>
 #include <utility>
 #include <vector>
@@ -349,10 +350,14 @@ int wl_callback_add_listener(struct wl_callback *callback, const struct wl_callb
   return AddListener(callback, listener, data);
 }
 
-// How long to wait for the compositor to answer a roundtrip.
-const int kRoundtripTimeoutMs = 500;
+// How long the whole handshake with the compositor may take.
+const int kConnectTimeoutMs = 2000;
 // The registry, the seat's capabilities and the keymap each take a roundtrip.
 const int kMaxRoundtrips = 4;
+
+// Set when a getter read the X server because the compositor didn't answer,
+// so that the listener notifies once it connects.
+std::atomic<bool> g_missed_compositor(false);
 // wl_seat version 5 is the first with wl_seat.release. Newer versions add no
 // wl_keyboard events, so the listeners below handle every event we can get.
 const uint32_t kMaxSeatVersion = 5;
@@ -607,25 +612,32 @@ const struct wl_callback_listener kSyncListener = {
   SyncDone,
 };
 
-// Like wl_display_roundtrip, but gives up after `timeout_ms`.
-bool Roundtrip(WaylandState *state, int timeout_ms) {
+// Like wl_display_roundtrip, but gives up at `deadline` (in NowMs time).
+// Returns 1 when the compositor answered, 0 when it didn't answer in time and
+// -1 when the connection failed.
+int Roundtrip(WaylandState *state, int64_t deadline) {
   struct wl_callback *callback = wl_display_sync(state->display);
   if (!callback) {
-    return false;
+    return -1;
   }
   bool done = false;
   wl_callback_add_listener(callback, &kSyncListener, &done);
 
-  int64_t deadline = NowMs() + timeout_ms;
+  int result = 1;
   while (!done) {
     int64_t remaining = deadline - NowMs();
-    if (remaining <= 0 || DispatchOnce(state, static_cast<int>(remaining), false) < 0) {
+    if (remaining <= 0) {
+      result = 0;
+      break;
+    }
+    if (DispatchOnce(state, static_cast<int>(remaining), false) < 0) {
+      result = -1;
       break;
     }
   }
 
   wl_callback_destroy(callback);
-  return done;
+  return result;
 }
 
 void Disconnect(WaylandState *state) {
@@ -644,16 +656,23 @@ void Disconnect(WaylandState *state) {
 // Opens a connection of our own to the compositor and waits for the keymap of
 // the first seat. A client without a surface gets the keymap, which the
 // compositor sends again whenever it changes, but not the modifiers and group.
-bool Connect(WaylandState *state) {
+// Sets `*timed_out` when the compositor didn't send it in time.
+bool Connect(WaylandState *state, bool *timed_out = nullptr) {
   // WAYLAND_SOCKET is an already connected socket that libwayland takes over
   // (and closes): it belongs to whoever it was passed to, not to us.
   if (getenv("WAYLAND_SOCKET")) {
     return false;
   }
+  // Without WAYLAND_DISPLAY, libwayland connects to wayland-0, which can be the
+  // compositor of another session of the same user.
+  const char *name = getenv("WAYLAND_DISPLAY");
+  if (!name || !*name) {
+    return false;
+  }
   if (!IsLoaded()) {
     return false;
   }
-  state->display = wl_display_connect(NULL);
+  state->display = wl_display_connect(name);
   if (!state->display) {
     return false;
   }
@@ -662,8 +681,13 @@ bool Connect(WaylandState *state) {
     return false;
   }
   wl_registry_add_listener(state->registry, &kRegistryListener, state);
+  int64_t deadline = NowMs() + kConnectTimeoutMs;
   for (int i = 0; i < kMaxRoundtrips && !state->has_keymap; i++) {
-    if (!Roundtrip(state, kRoundtripTimeoutMs)) {
+    int result = Roundtrip(state, deadline);
+    if (result <= 0) {
+      if (result == 0 && timed_out) {
+        *timed_out = true;
+      }
       break;
     }
   }
@@ -678,14 +702,14 @@ Backend ComputeBackend() {
   if (requested && strcmp(requested, "wayland") == 0) {
     return Backend::WaylandOnly;
   }
-  const char *wayland_display = getenv("WAYLAND_DISPLAY");
-  if (!wayland_display || !*wayland_display) {
-    return Backend::X11;
-  }
   WaylandState state;
-  bool connected = Connect(&state);
+  bool timed_out = false;
+  bool connected = Connect(&state, &timed_out);
   Disconnect(&state);
-  return connected ? Backend::Wayland : Backend::X11;
+  // A compositor that is slow to answer at startup, for example under load,
+  // is still the compositor: until it answers, the getters read the X server,
+  // and the listener notifies once it connects.
+  return connected || timed_out ? Backend::Wayland : Backend::X11;
 }
 
 Backend GetBackend() {
@@ -985,6 +1009,9 @@ bool ReadKeymapForGetter(bool only, std::string *keymap, uint32_t *group, bool *
     only = backend == Backend::WaylandOnly;
   }
   *connected = ReadKeymap(keymap, group);
+  if (!*connected && !only) {
+    g_missed_compositor = true;
+  }
   return only || (*connected && !PreferXServer(*keymap));
 }
 
@@ -1139,8 +1166,10 @@ void ListenToWaylandEvents(NotificationCallbackData *data) {
   bool first_attempt = true;
   while (true) {
     if (Connect(state)) {
-      if (!first_attempt) {
-        // Connected again, maybe to another compositor with another keymap.
+      // Notify when connected again, maybe to another compositor with another
+      // keymap, or for the first time after a getter read the X server instead.
+      bool missed = g_missed_compositor.exchange(false);
+      if (!first_attempt || missed) {
         InvokeNotificationCallback(data);
       }
       state->changed = false;

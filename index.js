@@ -3,13 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The Linux backend a getter reads: undefined for the default.
-function checkBackend(backend) {
-  if (backend !== undefined && backend !== 'x11' && backend !== 'wayland') {
-    throw new TypeError('The keyboard backend must be \'x11\', \'wayland\' or undefined.');
-  }
-}
-
 function NativeBinding() {
   this._tried = false;
   this._keymapping = null;
@@ -27,7 +20,6 @@ NativeBinding.prototype._init = function() {
   }
 };
 NativeBinding.prototype.getKeyMap = function(backend) {
-  checkBackend(backend);
   try {
     this._init();
     return this._keymapping.getKeyMap(backend);
@@ -37,7 +29,6 @@ NativeBinding.prototype.getKeyMap = function(backend) {
   }
 };
 NativeBinding.prototype.getCurrentKeyboardLayout = function(backend) {
-  checkBackend(backend);
   try {
     this._init();
     return this._keymapping.getCurrentKeyboardLayout(backend);

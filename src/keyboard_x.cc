@@ -474,6 +474,10 @@ static void InstallXIOErrorHandlers() {
 #endif
   if (g_set_io_error_exit_handler) {
     // Process-wide: the displays of other code go to the handler installed before.
+    // libX11 calls this handler before the display's exit handler, and the
+    // default one exits the process, so the exit handler alone can't keep the
+    // process alive. If other code replaces this handler later, losing the X
+    // server exits the process, as it did before.
     g_previous_io_error_handler = XSetIOErrorHandler(OnXIOError);
   }
 }
