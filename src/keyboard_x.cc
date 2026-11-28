@@ -46,7 +46,8 @@ class KeyModifierMaskToXModifierMask {
 
     XModifierKeymap* mod_map = XGetModifierMapping(display);
     int max_mod_keys = mod_map->max_keypermod;
-    for (int mod_index = 0; mod_index <= 8; ++mod_index) {
+    // The modifier map has 8 rows: Shift, Lock, Control and Mod1 to Mod5.
+    for (int mod_index = 0; mod_index < 8; ++mod_index) {
       for (int key_index = 0; key_index < max_mod_keys; ++key_index) {
         int key = mod_map->modifiermap[mod_index * max_mod_keys + key_index];
         if (!key) {
