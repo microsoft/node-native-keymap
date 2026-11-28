@@ -761,8 +761,9 @@ xkb_mod_mask_t FindModifierOfKeysym(struct xkb_keymap *keymap, xkb_keysym_t keys
 }
 
 // Returns the name of a section of the keymap, such as `pc+us+ru:2+inet(evdev)`
-// for `xkb_symbols`. xkbcommon keeps the names that the compositor compiled
-// the keymap from.
+// for `xkb_symbols`. xkbcommon 1.8 and older write `(unnamed)` for a keymap
+// compiled from names; 1.9 and newer write its include statement escaped, so
+// `pc_us_ru_2_inet(evdev)` (see IsEscapedSymbolsName).
 std::string GetSectionName(const std::string &keymap, const char *section) {
   std::string needle = std::string(section) + " \"";
   size_t start = keymap.find(needle);
@@ -807,6 +808,28 @@ std::string Join(const std::vector<std::string> &parts) {
     all_empty = all_empty && parts[i].empty();
   }
   return all_empty ? std::string() : result;
+}
+
+// xkbcommon escapes the section names it writes, as X's xkbcomp does: every
+// character but letters, digits and `()/-_*?` becomes `_`. So the
+// `+`, `:` and `|` that separate the parts of `pc+us+us:2+inet(evdev)` arrive
+// as `pc_us_us_2_inet(evdev)`, which can't be split back into layouts.
+// An `_` inside parentheses belongs to a variant, such as `fr(oss_latin9)`.
+bool IsEscapedSymbolsName(const std::string &symbols) {
+  if (symbols.find_first_of("+|:") != std::string::npos) {
+    return false;
+  }
+  int depth = 0;
+  for (char c : symbols) {
+    if (c == '(') {
+      depth++;
+    } else if (c == ')') {
+      depth--;
+    } else if (c == '_' && depth == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Turns `pc+us(intl)+ru:2+inet(evdev)` into layouts `us,ru` and variants `intl,`.
@@ -1111,9 +1134,12 @@ napi_value GetCurrentKeyboardLayoutWayland(napi_env env, bool only, bool *handle
 
   std::string layout;
   std::string variant;
-  ParseSymbols(GetSectionName(keymap_text, "xkb_symbols"), &layout, &variant);
+  std::string symbols = GetSectionName(keymap_text, "xkb_symbols");
+  if (!IsEscapedSymbolsName(symbols)) {
+    ParseSymbols(symbols, &layout, &variant);
+  }
   if (layout.empty()) {
-    // Compositors that compile their keymap with xkbcommon don't name its sections.
+    // xkbcommon names the section `(unnamed)` or escapes its name.
     GetLayoutsFromGroupNames(keymap_text, &layout, &variant);
   }
   // wl_keyboard keycodes are evdev keycodes.
